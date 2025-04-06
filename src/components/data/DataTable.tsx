@@ -81,6 +81,24 @@ function DataTable<T extends Record<string, any>>({
       <ArrowDown className="h-3 w-3 ml-1" />;
   };
 
+  const getStatusColor = (status: string) => {
+    switch(status.toLowerCase()) {
+      case "active":
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "inactive":
+      case "on hold":
+        return "bg-amber-100 text-amber-800";
+      case "lead":
+      case "planning":
+        return "bg-blue-100 text-blue-800";
+      case "in progress":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -89,13 +107,13 @@ function DataTable<T extends Record<string, any>>({
           placeholder="Search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className="pl-10 border-estate-border"
         />
       </div>
       
-      <div className="rounded-md border border-estate-border overflow-hidden">
+      <div className="rounded-md border border-estate-border shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-estate-background">
+          <TableHeader className="bg-slate-50">
             <TableRow>
               {columns.map((column) => (
                 <TableHead key={column.key} className="font-semibold">
@@ -116,14 +134,25 @@ function DataTable<T extends Record<string, any>>({
               sortedData.map((item, rowIndex) => (
                 <TableRow
                   key={rowIndex}
-                  className={onRowClick ? "cursor-pointer hover:bg-estate-background" : ""}
+                  className={onRowClick ? "cursor-pointer transition-colors hover:bg-slate-50" : ""}
                   onClick={() => onRowClick && onRowClick(item)}
                 >
-                  {columns.map((column) => (
-                    <TableCell key={`${rowIndex}-${column.key}`}>
-                      {column.renderCell
-                        ? column.renderCell(item)
-                        : item[column.key]}
+                  {columns.map((column, colIndex) => (
+                    <TableCell 
+                      key={`${rowIndex}-${column.key}`}
+                      className={
+                        column.key === "status" && typeof item[column.key] === "string" 
+                          ? "py-2"
+                          : ""
+                      }
+                    >
+                      {column.key === "status" && typeof item[column.key] === "string" ? (
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item[column.key])}`}>
+                          {column.renderCell ? column.renderCell(item) : item[column.key]}
+                        </span>
+                      ) : (
+                        column.renderCell ? column.renderCell(item) : item[column.key]
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
