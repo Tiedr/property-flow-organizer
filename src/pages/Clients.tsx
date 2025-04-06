@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -41,14 +40,18 @@ const Clients = () => {
   };
 
   const handleImportClients = (importedClients: any[]) => {
-    const formatted = importedClients.map((client) => ({
+    const formatted: Client[] = importedClients.map((client) => ({
       id: uuidv4(),
       name: client.name || "Unknown",
       email: client.email || "",
       phone: client.phone || "",
-      company: client.company || "",
+      company: client.company || undefined,
+      // Ensure type is strictly "Individual" or "Company"
       type: client.type === "Company" ? "Company" : "Individual",
-      status: client.status || "Active",
+      // Ensure status is strictly one of the allowed values
+      status: ["Active", "Inactive", "Lead"].includes(client.status) 
+        ? client.status as "Active" | "Inactive" | "Lead"
+        : "Active",
       projects: 0,
       createdAt: new Date().toISOString().split("T")[0],
     }));
