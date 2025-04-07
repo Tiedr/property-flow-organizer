@@ -1,5 +1,5 @@
 
-export interface Estate {
+export interface EstateEntry {
   id: string;
   clientName: string;
   uniqueId: string;
@@ -13,6 +13,15 @@ export interface Estate {
   address: string;
   paymentStatus: "Paid" | "Partial" | "Pending" | "Overdue";
   nextDueDate: string;
+}
+
+export interface Estate {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  entries: EstateEntry[];
 }
 
 export interface Client {
