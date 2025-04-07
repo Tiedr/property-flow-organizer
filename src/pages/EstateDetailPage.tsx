@@ -37,17 +37,45 @@ const EstateDetailPage = () => {
   const [isAddEntryDialogOpen, setIsAddEntryDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<EstateEntry | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // In a real app, you'd fetch this estate from an API
     // For now, we'll generate the mock data and find the estate by id
-    const allEstates = generateEstateData(5);
-    const foundEstate = allEstates.find(e => e.id === id);
-    
-    if (foundEstate) {
-      setEstate(foundEstate);
-    }
-  }, [id]);
+    const fetchEstate = () => {
+      try {
+        setLoading(true);
+        // Generate mock data - in a real app this would be a fetch
+        const allEstates = generateEstateData(5);
+        console.log("All estates:", allEstates);
+        console.log("Looking for estate with ID:", id);
+        
+        const foundEstate = allEstates.find(e => e.id === id);
+        console.log("Found estate:", foundEstate);
+        
+        if (foundEstate) {
+          setEstate(foundEstate);
+        } else {
+          toast({
+            title: "Estate not found",
+            description: "Could not find the requested estate",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching estate:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load estate details",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEstate();
+  }, [id, toast]);
 
   const handleBack = () => {
     navigate(-1);
@@ -170,6 +198,16 @@ const EstateDetailPage = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-64">
+          <p className="text-lg text-muted-foreground">Loading estate details...</p>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!estate) {
     return (
       <Layout>
@@ -228,7 +266,7 @@ const EstateDetailPage = () => {
       </div>
 
       <div className="border rounded-lg shadow-sm overflow-hidden">
-        {estate.entries.length > 0 ? (
+        {estate.entries && estate.entries.length > 0 ? (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader className="bg-slate-50">
@@ -337,7 +375,7 @@ const EstateDetailPage = () => {
             </DialogDescription>
           </DialogHeader>
           <EstateForm
-            estate={selectedEntry}
+            entry={selectedEntry}
             onSubmit={handleEntrySubmit}
             onCancel={() => setIsAddEntryDialogOpen(false)}
           />

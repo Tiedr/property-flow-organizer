@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { EstateEntry } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -15,25 +14,25 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 
 interface EstateFormProps {
-  estate?: EstateEntry;
-  onSubmit: (estate: Omit<EstateEntry, "id">) => void;
+  entry?: EstateEntry | null;
+  onSubmit: (entry: Omit<EstateEntry, "id">) => void;
   onCancel: () => void;
 }
 
-const EstateForm = ({ estate, onSubmit, onCancel }: EstateFormProps) => {
+const EstateForm = ({ entry, onSubmit, onCancel }: EstateFormProps) => {
   const [formData, setFormData] = useState({
-    clientName: estate?.clientName || "",
-    uniqueId: estate?.uniqueId || "",
-    representative: estate?.representative || "",
-    plotNumbers: estate?.plotNumbers?.join(", ") || "",
-    amount: estate?.amount || 0,
-    amountPaid: estate?.amountPaid || 0,
-    documentsReceived: estate?.documentsReceived?.join(", ") || "",
-    phoneNumber: estate?.phoneNumber || "",
-    email: estate?.email || "",
-    address: estate?.address || "",
-    paymentStatus: estate?.paymentStatus || "Pending",
-    nextDueDate: estate?.nextDueDate || new Date().toISOString().split('T')[0],
+    clientName: entry?.clientName || "",
+    uniqueId: entry?.uniqueId || "",
+    representative: entry?.representative || "",
+    plotNumbers: entry?.plotNumbers?.join(", ") || "",
+    amount: entry?.amount || 0,
+    amountPaid: entry?.amountPaid || 0,
+    documentsReceived: entry?.documentsReceived?.join(", ") || "",
+    phoneNumber: entry?.phoneNumber || "",
+    email: entry?.email || "",
+    address: entry?.address || "",
+    paymentStatus: entry?.paymentStatus || "Pending",
+    nextDueDate: entry?.nextDueDate || new Date().toISOString().split('T')[0],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
@@ -94,7 +93,7 @@ const EstateForm = ({ estate, onSubmit, onCancel }: EstateFormProps) => {
     e.preventDefault();
     
     if (validateForm()) {
-      const estateData: Omit<EstateEntry, "id"> = {
+      const entryData: Omit<EstateEntry, "id"> = {
         ...formData,
         plotNumbers: formData.plotNumbers.split(",").map(plot => plot.trim()).filter(plot => plot !== ""),
         documentsReceived: formData.documentsReceived.split(",").map(doc => doc.trim()).filter(doc => doc !== ""),
@@ -103,10 +102,10 @@ const EstateForm = ({ estate, onSubmit, onCancel }: EstateFormProps) => {
         paymentStatus: formData.paymentStatus as "Paid" | "Partial" | "Pending" | "Overdue",
       };
       
-      onSubmit(estateData);
+      onSubmit(entryData);
       toast({
-        title: estate ? "Entry updated" : "Entry created",
-        description: `${formData.clientName} has been ${estate ? "updated" : "created"} successfully.`,
+        title: entry ? "Entry updated" : "Entry created",
+        description: `${formData.clientName} has been ${entry ? "updated" : "created"} successfully.`,
       });
     }
   };
@@ -265,7 +264,7 @@ const EstateForm = ({ estate, onSubmit, onCancel }: EstateFormProps) => {
           Cancel
         </Button>
         <Button type="submit">
-          {estate ? "Update Estate" : "Create Estate"}
+          {entry ? "Update Entry" : "Create Entry"}
         </Button>
       </div>
     </form>

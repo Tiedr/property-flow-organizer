@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -41,15 +40,29 @@ const EstateTable = () => {
     name: '',
     description: ''
   });
+  const [loading, setLoading] = useState(true);
   
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Generate mock data using the updated structure
-    const mockEstates = generateEstateData(5);
-    setEstates(mockEstates);
-  }, []);
+    setLoading(true);
+    try {
+      const mockEstates = generateEstateData(5);
+      console.log("Generated estate data:", mockEstates);
+      setEstates(mockEstates);
+    } catch (error) {
+      console.error("Error generating estate data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load estates",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   const handleExport = () => {
     toast({
@@ -67,6 +80,7 @@ const EstateTable = () => {
   };
 
   const handleEstateClick = (estate: Estate) => {
+    console.log("Navigating to estate:", estate);
     navigate(`/estates/${estate.id}`);
   };
 
@@ -130,48 +144,54 @@ const EstateTable = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mb-10">
-        {estates.length > 0 ? (
-          estates.map((estate) => (
-            <Card 
-              key={estate.id} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => handleEstateClick(estate)}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TableIcon className="mr-2 h-5 w-5" />
-                  {estate.name}
-                </CardTitle>
-                <CardDescription>
-                  {estate.description || "No description provided"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  <div className="flex justify-between mb-1">
-                    <span>Created:</span>
-                    <span>{new Date(estate.createdAt).toLocaleDateString()}</span>
+      {loading ? (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">Loading estate tables...</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mb-10">
+          {estates.length > 0 ? (
+            estates.map((estate) => (
+              <Card 
+                key={estate.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handleEstateClick(estate)}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TableIcon className="mr-2 h-5 w-5" />
+                    {estate.name}
+                  </CardTitle>
+                  <CardDescription>
+                    {estate.description || "No description provided"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-muted-foreground">
+                    <div className="flex justify-between mb-1">
+                      <span>Created:</span>
+                      <span>{new Date(estate.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Entries:</span>
+                      <span>{estate.entries.length}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Entries:</span>
-                    <span>{estate.entries.length}</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="bg-slate-50 rounded-b-lg">
-                <p className="text-sm text-muted-foreground w-full text-center">
-                  Click to view estate table
-                </p>
-              </CardFooter>
-            </Card>
-          ))
-        ) : (
-          <div className="text-center py-10 col-span-full">
-            <p className="text-muted-foreground">No estate tables found. Add an estate to get started.</p>
-          </div>
-        )}
-      </div>
+                </CardContent>
+                <CardFooter className="bg-slate-50 rounded-b-lg">
+                  <p className="text-sm text-muted-foreground w-full text-center">
+                    Click to view estate table
+                  </p>
+                </CardFooter>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center py-10 col-span-full">
+              <p className="text-muted-foreground">No estate tables found. Add an estate to get started.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add Estate Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
