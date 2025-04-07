@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Estate, EstateEntry } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { generateEstateData } from "@/services/estateData";
-import { ArrowLeft, Edit, Trash, Plus, FilePlus } from "lucide-react";
+import { ArrowLeft, Edit, Trash, Plus, FilePlus, Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +24,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { v4 as uuidv4 } from "uuid";
+import ImportEstateData from "@/components/data/ImportEstateData";
 
 const EstateDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +35,7 @@ const EstateDetailPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddEntryDialogOpen, setIsAddEntryDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<EstateEntry | null>(null);
 
   useEffect(() => {
@@ -127,6 +128,28 @@ const EstateDetailPage = () => {
     setIsAddEntryDialogOpen(false);
   };
 
+  const handleImportEntries = (entries: Omit<EstateEntry, "id">[]) => {
+    if (!estate) return;
+    
+    const newEntries = entries.map(entry => ({
+      ...entry,
+      id: uuidv4()
+    }));
+    
+    setEstate({
+      ...estate,
+      entries: [...estate.entries, ...newEntries],
+      updatedAt: new Date().toISOString()
+    });
+    
+    setIsImportDialogOpen(false);
+    
+    toast({
+      title: "Import Successful",
+      description: `${newEntries.length} entries imported successfully.`
+    });
+  };
+
   const handleDeleteEntry = (entryId: string) => {
     if (!estate) return;
 
@@ -169,14 +192,18 @@ const EstateDetailPage = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{estate.name}</h1>
+            <h1 className="text-3xl font-bold">{estate?.name}</h1>
             <p className="text-muted-foreground">
-              Created: {new Date(estate.createdAt).toLocaleDateString()} | 
-              Last Updated: {new Date(estate.updatedAt).toLocaleDateString()}
+              Created: {estate && new Date(estate.createdAt).toLocaleDateString()} | 
+              Last Updated: {estate && new Date(estate.updatedAt).toLocaleDateString()}
             </p>
           </div>
         </div>
         <div className="flex mt-4 sm:mt-0 gap-2">
+          <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Import Entries
+          </Button>
           <Button onClick={handleEditEstate} variant="outline">
             <Edit className="mr-2 h-4 w-4" />
             Edit Estate
@@ -279,6 +306,24 @@ const EstateDetailPage = () => {
           </div>
         )}
       </div>
+
+      {/* Import Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import Estate Entries</DialogTitle>
+            <DialogDescription>
+              Import entries from Excel or XML files.
+            </DialogDescription>
+          </DialogHeader>
+          <ImportEstateData onImport={handleImportEntries} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Entry Dialog */}
       <Dialog open={isAddEntryDialogOpen} onOpenChange={setIsAddEntryDialogOpen}>

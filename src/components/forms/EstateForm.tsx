@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Estate } from "@/types";
+import { EstateEntry } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +15,8 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 
 interface EstateFormProps {
-  estate?: Estate;
-  onSubmit: (estate: Omit<Estate, "id">) => void;
+  estate?: EstateEntry;
+  onSubmit: (estate: Omit<EstateEntry, "id">) => void;
   onCancel: () => void;
 }
 
@@ -94,7 +94,7 @@ const EstateForm = ({ estate, onSubmit, onCancel }: EstateFormProps) => {
     e.preventDefault();
     
     if (validateForm()) {
-      const estateData: Omit<Estate, "id"> = {
+      const estateData: Omit<EstateEntry, "id"> = {
         ...formData,
         plotNumbers: formData.plotNumbers.split(",").map(plot => plot.trim()).filter(plot => plot !== ""),
         documentsReceived: formData.documentsReceived.split(",").map(doc => doc.trim()).filter(doc => doc !== ""),
@@ -105,7 +105,7 @@ const EstateForm = ({ estate, onSubmit, onCancel }: EstateFormProps) => {
       
       onSubmit(estateData);
       toast({
-        title: estate ? "Estate updated" : "Estate created",
+        title: estate ? "Entry updated" : "Entry created",
         description: `${formData.clientName} has been ${estate ? "updated" : "created"} successfully.`,
       });
     }

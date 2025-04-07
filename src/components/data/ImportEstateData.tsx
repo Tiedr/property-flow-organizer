@@ -1,14 +1,12 @@
-
 import { ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Upload, FilePlus2 } from "lucide-react";
-import { Estate } from "@/types";
+import { EstateEntry } from "@/types";
 import * as XLSX from "xlsx";
-import { v4 as uuidv4 } from "uuid";
 
 interface ImportEstateDataProps {
-  onImport: (data: Omit<Estate, "id">[]) => void;
+  onImport: (data: Omit<EstateEntry, "id">[]) => void;
 }
 
 const ImportEstateData = ({ onImport }: ImportEstateDataProps) => {
@@ -21,7 +19,7 @@ const ImportEstateData = ({ onImport }: ImportEstateDataProps) => {
     const worksheet = workbook.Sheets[worksheetName];
     const data = XLSX.utils.sheet_to_json(worksheet);
     
-    // Map Excel data to Estate structure
+    // Map Excel data to EstateEntry structure
     return data.map((row: any) => {
       return {
         clientName: row["Client Name"] || "",
@@ -44,8 +42,8 @@ const ImportEstateData = ({ onImport }: ImportEstateDataProps) => {
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(text, "text/xml");
-      const estateNodes = xmlDoc.getElementsByTagName("Estate");
-      const estates: Omit<Estate, "id">[] = [];
+      const estateNodes = xmlDoc.getElementsByTagName("EstateEntry");
+      const entries: Omit<EstateEntry, "id">[] = [];
 
       for (let i = 0; i < estateNodes.length; i++) {
         const estate = estateNodes[i];
@@ -57,7 +55,7 @@ const ImportEstateData = ({ onImport }: ImportEstateDataProps) => {
         const plotNumbersStr = getNodeValue("PlotNumbers");
         const docsReceivedStr = getNodeValue("DocumentsReceived");
         
-        estates.push({
+        entries.push({
           clientName: getNodeValue("ClientName"),
           uniqueId: getNodeValue("UniqueId") || `EST-${Math.floor(Math.random() * 10000)}`,
           representative: getNodeValue("Representative"),
@@ -73,7 +71,7 @@ const ImportEstateData = ({ onImport }: ImportEstateDataProps) => {
         });
       }
 
-      return estates;
+      return entries;
     } catch (error) {
       console.error("XML parsing error:", error);
       throw new Error("Failed to parse XML file");
@@ -93,7 +91,7 @@ const ImportEstateData = ({ onImport }: ImportEstateDataProps) => {
     
     reader.onload = async (event) => {
       try {
-        let data: Omit<Estate, "id">[] = [];
+        let data: Omit<EstateEntry, "id">[] = [];
 
         if (fileExt === 'xlsx' || fileExt === 'xls') {
           const buffer = event.target?.result as ArrayBuffer;
