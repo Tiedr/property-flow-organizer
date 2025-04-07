@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 const EstateTable = () => {
   const [estates, setEstates] = useState<Estate[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -119,7 +120,7 @@ const EstateTable = () => {
       {loading ? <div className="text-center py-10">
           <p className="text-muted-foreground">Loading estate tables...</p>
         </div> : <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10 rounded-none">
-          {estates.length > 0 ? estates.map(estate => <Card key={estate.id} onClick={() => handleEstateClick(estate)} className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border border-white">
+          {estates.length > 0 ? estates.map(estate => <Card key={estate.id} onClick={() => handleEstateClick(estate)} className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border-2 border-white/70 shadow-[0_0_5px_rgba(255,255,255,0.5)]">
                 <CardHeader>
                   <CardTitle className="flex items-center text-[#fff0f1]">
                     <TableIcon className="mr-2 h-5 w-5" />
