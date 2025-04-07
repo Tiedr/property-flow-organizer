@@ -10,16 +10,16 @@ const Logo = ({
 }: LogoProps) => {
   const navigate = useNavigate();
   const sizeClasses = {
-    sm: "h-5",
-    md: "h-7",
-    lg: "h-9"
+    sm: "h-6",
+    md: "h-9",
+    lg: "h-11"
   };
 
   return (
     <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
       <div className="flex items-center">
         <img 
-          alt="UGHORON DB" 
+          alt="UGHORON" 
           className={`object-contain ${sizeClasses[size]}`} 
           src="/lovable-uploads/2599a9a8-5e42-4df4-b098-b188c2704994.png" 
         />
