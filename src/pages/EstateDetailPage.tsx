@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -15,6 +14,7 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label"; // Added this import for Label
 import EstateForm from "@/components/forms/EstateForm";
 import {
   Table,
