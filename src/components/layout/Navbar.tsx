@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/layout/Logo";
 
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,19 +22,24 @@ const Navbar = () => {
   };
 
   return (
-    <div className="border-b border-estate-border bg-white p-4 flex items-center justify-between">
-      <form onSubmit={handleSearch} className="relative max-w-md w-full hidden md:block">
+    <div className="border-b border-estate-border glass-card bg-transparent p-4 flex items-center justify-between">
+      <div className="flex items-center">
+        <Logo />
+      </div>
+      
+      <form onSubmit={handleSearch} className="relative max-w-md w-full hidden md:block mx-4">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-estate-muted" />
         <Input
           placeholder="Search clients, projects..."
-          className="pl-9 bg-estate-background border-estate-border"
+          className="pl-9 glass-input"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </form>
       
-      <div className="flex items-center ml-auto space-x-4">
-        <Button variant="ghost" className="p-2">
+      <div className="flex items-center space-x-4">
+        <ThemeToggle />
+        <Button variant="ghost" className="p-2 glass-input">
           <User className="h-5 w-5 text-estate-muted" />
         </Button>
       </div>
