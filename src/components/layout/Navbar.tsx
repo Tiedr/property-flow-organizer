@@ -22,7 +22,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="apple-nav sticky top-0 z-50 px-4 py-2 flex items-center justify-between">
+    <div className="apple-nav sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
       <div className="flex items-center">
         <Logo size="sm" />
       </div>
@@ -31,7 +31,7 @@ const Navbar = () => {
         <Search className="absolute left-3 top-3 h-4 w-4 text-white/50" />
         <Input
           placeholder="Search clients, projects..."
-          className="pl-9 glass-input bg-white/10 h-10 rounded-full"
+          className="pl-9 glass-input h-10 rounded-full"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />

@@ -82,19 +82,19 @@
   
   /* Light mode specific overrides */
   .light-mode .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
+    @apply bg-white/70 backdrop-blur-md border border-white/30 shadow-lg;
   }
   
   .light-mode .glass-card {
-    @apply bg-white/80 backdrop-blur-xl border border-white/30 shadow-xl;
+    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl;
   }
   
   .light-mode .glass-input {
-    @apply bg-white/60 backdrop-blur-md border border-white/30;
+    @apply bg-white/70 backdrop-blur-md border border-white/40;
   }
 
   .light-mode .apple-nav {
-    @apply bg-white/80 backdrop-blur-2xl border-b border-white/20;
+    @apply bg-white/90 backdrop-blur-2xl border-b border-white/30;
   }
 
   .light-mode .text-gradient-apple {
@@ -105,15 +105,15 @@
 /* Glassmorphism utility classes */
 @layer utilities {
   .glass {
-    @apply bg-black/20 backdrop-blur-md border border-white/10 shadow-lg;
+    @apply bg-black/40 backdrop-blur-md border border-white/20 shadow-lg;
   }
   
   .glass-card {
-    @apply bg-black/30 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl;
+    @apply bg-black/50 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl;
   }
   
   .glass-input {
-    @apply bg-black/20 backdrop-blur-md border border-white/10 rounded-xl;
+    @apply bg-black/40 backdrop-blur-md border border-white/20 rounded-xl;
   }
 
   .apple-btn {
@@ -121,7 +121,7 @@
   }
 
   .apple-nav {
-    @apply bg-black/30 backdrop-blur-2xl border-b border-white/10;
+    @apply bg-black/50 backdrop-blur-2xl border-b border-white/20;
   }
   
   .red-glow {
@@ -175,5 +175,5 @@
 }
 
 .apple-button-secondary {
-  @apply rounded-full py-2 px-6 font-medium transition-all duration-200 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20;
+  @apply rounded-full py-2 px-6 font-medium transition-all duration-200 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30;
 }
