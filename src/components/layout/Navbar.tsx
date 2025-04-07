@@ -40,7 +40,7 @@ const Navbar = () => {
       <div className="flex items-center space-x-4">
         <ThemeToggle />
         <Button variant="ghost" className="rounded-full w-10 h-10 p-2 glass-input">
-          <User className="h-5 w-5 text-white" />
+          <User className="h-5 w-5 text-white light-mode:text-black" />
         </Button>
       </div>
     </div>
