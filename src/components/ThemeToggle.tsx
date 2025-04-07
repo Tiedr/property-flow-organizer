@@ -19,6 +19,9 @@ const ThemeToggle = () => {
     setTheme(newTheme);
     localStorage.setItem("ughoron-theme", newTheme);
     document.documentElement.classList.toggle("light-mode", newTheme === "light");
+    
+    // Dispatch a custom event to notify other components about the theme change
+    window.dispatchEvent(new CustomEvent("themeChange", { detail: { theme: newTheme } }));
   };
 
   return (
