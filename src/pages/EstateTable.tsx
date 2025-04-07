@@ -6,8 +6,7 @@ import { Estate } from "@/types";
 import DataTable from "@/components/data/DataTable";
 import { useToast } from "@/components/ui/use-toast";
 import { generateMockEstateData } from "@/services/estateData";
-import { Search, Download, Plus, FileUp } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Download, FileUp, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -57,7 +56,7 @@ const EstateTable = () => {
     
     toast({
       title: "Estate Added",
-      description: `Estate for client ${newEstate.clientName} has been added successfully.`
+      description: `Estate ${newEstate.uniqueId} has been added successfully.`
     });
   };
   
@@ -76,17 +75,8 @@ const EstateTable = () => {
     });
   };
 
-  // Group estates by client name
-  const estatesByClient: Record<string, Estate[]> = {};
-  estates.forEach(estate => {
-    if (!estatesByClient[estate.clientName]) {
-      estatesByClient[estate.clientName] = [];
-    }
-    estatesByClient[estate.clientName].push(estate);
-  });
-
   const tableColumns = [
-    { key: "uniqueId", header: "ID" },
+    { key: "clientName", header: "Client Name" },
     { key: "representative", header: "Representative" },
     { 
       key: "plotNumbers", 
@@ -121,7 +111,7 @@ const EstateTable = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Estate Management</h1>
-          <p className="text-estate-muted">Manage your estate clients and plots</p>
+          <p className="text-estate-muted">Manage your estate properties</p>
         </div>
         <div className="flex flex-wrap mt-4 sm:mt-0 gap-3">
           <Button variant="outline" onClick={handleExport}>
@@ -140,17 +130,17 @@ const EstateTable = () => {
       </div>
 
       <div className="space-y-10">
-        {Object.keys(estatesByClient).length > 0 ? (
-          Object.entries(estatesByClient).map(([clientName, clientEstates]) => (
-            <div key={clientName} className="border border-estate-border rounded-lg shadow-sm overflow-hidden">
+        {estates.length > 0 ? (
+          estates.map((estate) => (
+            <div key={estate.id} className="border border-estate-border rounded-lg shadow-sm overflow-hidden mb-6">
               <div className="bg-slate-50 border-b border-estate-border p-4">
-                <h2 className="text-xl font-bold">{clientName}</h2>
+                <h2 className="text-xl font-bold">Estate ID: {estate.uniqueId}</h2>
                 <p className="text-sm text-muted-foreground">
-                  {clientEstates.length} {clientEstates.length === 1 ? 'estate' : 'estates'}
+                  Client: {estate.clientName}
                 </p>
               </div>
               <DataTable
-                data={clientEstates}
+                data={[estate]}
                 columns={tableColumns}
               />
             </div>
