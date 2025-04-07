@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import Navbar from "./Navbar";
 
@@ -41,7 +40,6 @@ const Layout = ({ children }: LayoutProps) => {
 
   const darkModeStyles = {
     backgroundImage: `
-      linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.65)),
       url("/lovable-uploads/56c7d5b6-e735-4be3-8e41-b6832c066c9f.png")
     `,
     backgroundSize: "cover",
@@ -53,7 +51,6 @@ const Layout = ({ children }: LayoutProps) => {
 
   const lightModeStyles = {
     backgroundImage: `
-      linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.7)),
       url("/lovable-uploads/56c7d5b6-e735-4be3-8e41-b6832c066c9f.png")
     `,
     backgroundSize: "cover",
@@ -68,7 +65,6 @@ const Layout = ({ children }: LayoutProps) => {
       className="flex flex-col min-h-screen"
       style={theme === "dark" ? darkModeStyles : lightModeStyles}
     >
-      <div className="absolute inset-0 backdrop-blur-[2px]" style={{ zIndex: 0 }}></div>
       <div className="relative z-10 flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1 p-4 md:p-6 overflow-auto animate-fade-in max-w-[1800px] w-full mx-auto">
