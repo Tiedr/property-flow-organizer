@@ -19,9 +19,13 @@ const Logo = ({
   return (
     <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
       <div className="flex items-center">
-        <img src="/lovable-uploads/a6d7d39b-e6ea-4c27-a54b-eca85a3137d5.png" alt="UGHORON DB" className={`${sizeClasses[size]} mr-2`} />
+        <img 
+          src="/lovable-uploads/a6d7d39b-e6ea-4c27-a54b-eca85a3137d5.png" 
+          alt="UGHORON DB" 
+          className={`${sizeClasses[size]} mr-2`} 
+        />
         <span className={`font-bold ${size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg"} text-white`}>
-          UGHORON <span className="text-gradient-apple">DB</span>
+          <span className="text-gradient-apple">DB</span>
         </span>
       </div>
     </div>
