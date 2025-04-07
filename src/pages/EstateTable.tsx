@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -121,7 +122,7 @@ const EstateTable = () => {
       {loading ? <div className="text-center py-10">
           <p className="text-muted-foreground">Loading estate tables...</p>
         </div> : <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10 rounded-none">
-          {estates.length > 0 ? estates.map(estate => <Card key={estate.id} onClick={() => handleEstateClick(estate)} className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border-3 border-white shadow-[0_0_8px_rgba(255,255,255,0.6)]">
+          {estates.length > 0 ? estates.map(estate => <Card key={estate.id} onClick={() => handleEstateClick(estate)} className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border border-white shadow-[0_0_8px_rgba(255,255,255,0.6)]">
                 <CardHeader>
                   <CardTitle className="flex items-center text-white">
                     <TableIcon className="mr-2 h-5 w-5" />
@@ -155,7 +156,7 @@ const EstateTable = () => {
                     Click to view estate table
                   </p>
                 </CardFooter>
-              </Card>) : <div className="text-center py-10 col-span-full glass p-8 rounded-lg border-2 border-white">
+              </Card>) : <div className="text-center py-10 col-span-full glass p-8 rounded-lg border border-white">
               <p className="text-muted-foreground">No estate tables found. Add an estate to get started.</p>
             </div>}
         </div>}
@@ -205,4 +206,5 @@ const EstateTable = () => {
       </Dialog>
     </Layout>;
 };
+
 export default EstateTable;

@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/layout/Logo";
 
 const Navbar = () => {
@@ -28,19 +27,18 @@ const Navbar = () => {
       </div>
       
       <form onSubmit={handleSearch} className="relative max-w-md w-full hidden md:block mx-4">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-white light-mode:text-black" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-white" />
         <Input
           placeholder="Search clients, projects..."
-          className="pl-9 glass-input h-10 rounded-full text-black light-mode:text-black light-mode:placeholder:text-black/70"
+          className="pl-9 glass-input h-10 rounded-full text-black"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </form>
       
-      <div className="flex items-center space-x-4">
-        <ThemeToggle />
+      <div className="flex items-center">
         <Button variant="ghost" className="rounded-full w-10 h-10 p-2 glass-input">
-          <User className="h-5 w-5 text-white light-mode:text-black" />
+          <User className="h-5 w-5 text-white" />
         </Button>
       </div>
     </div>
