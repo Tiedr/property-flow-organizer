@@ -28,10 +28,10 @@ const Navbar = () => {
       </div>
       
       <form onSubmit={handleSearch} className="relative max-w-md w-full hidden md:block mx-4">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-white/50" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-white/80" />
         <Input
           placeholder="Search clients, projects..."
-          className="pl-9 glass-input h-10 rounded-full"
+          className="pl-9 glass-input h-10 rounded-full text-enhanced"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -40,7 +40,7 @@ const Navbar = () => {
       <div className="flex items-center space-x-4">
         <ThemeToggle />
         <Button variant="ghost" className="rounded-full w-10 h-10 p-2 glass-input">
-          <User className="h-5 w-5 text-white/80" />
+          <User className="h-5 w-5 text-white/90" />
         </Button>
       </div>
     </div>

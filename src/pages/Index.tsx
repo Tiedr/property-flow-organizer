@@ -12,7 +12,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-estate-background">
-      <p className="text-estate-muted">Redirecting to dashboard...</p>
+      <p className="text-enhanced text-xl">Redirecting to dashboard...</p>
     </div>
   );
 };

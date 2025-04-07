@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -103,6 +104,19 @@
   .light-mode .text-gradient-apple {
     @apply bg-gradient-to-r from-estate-primary to-red-500 bg-clip-text text-transparent;
   }
+  
+  /* Improved text readability for light mode */
+  .light-mode .text-enhanced {
+    @apply text-black font-medium;
+  }
+  
+  .light-mode .text-card-title {
+    @apply text-black font-bold;
+  }
+  
+  .light-mode .text-card-content {
+    @apply text-black/90;
+  }
 }
 
 /* Glassmorphism utility classes */
@@ -163,6 +177,27 @@
   
   .apple-glass {
     @apply backdrop-blur-xl bg-black/40 border border-white/20;
+  }
+  
+  /* Enhanced text visibility classes */
+  .text-enhanced {
+    @apply text-white font-medium text-shadow-sm;
+  }
+  
+  .text-card-title {
+    @apply text-white font-bold text-shadow-sm;
+  }
+  
+  .text-card-content {
+    @apply text-white/90 text-shadow-xs;
+  }
+  
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  
+  .text-shadow-xs {
+    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
   }
 }
 
