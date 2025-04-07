@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -155,10 +154,9 @@ const EstateTable = () => {
             estates.map((estate) => (
               <Card 
                 key={estate.id} 
-                className="glass-card card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden"
+                className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden"
                 onClick={() => handleEstateClick(estate)}
               >
-                <div className="absolute h-1 top-0 left-0 right-0 bg-gradient-to-r from-estate-primary to-red-400"></div>
                 <CardHeader>
                   <CardTitle className="flex items-center text-estate-primary">
                     <TableIcon className="mr-2 h-5 w-5" />
@@ -204,7 +202,7 @@ const EstateTable = () => {
 
       {/* Add Estate Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="glass-card border-estate-primary/20 max-w-md">
+        <DialogContent className="glass-card-ultra-light border-estate-primary/20 max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gradient">Create New Estate Table</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -244,7 +242,7 @@ const EstateTable = () => {
 
       {/* Import Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="glass-card border-estate-primary/20 max-w-md">
+        <DialogContent className="glass-card-ultra-light border-estate-primary/20 max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gradient">Import Estate Data</DialogTitle>
             <DialogDescription className="text-muted-foreground">

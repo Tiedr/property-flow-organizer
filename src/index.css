@@ -88,6 +88,10 @@
     @apply bg-white/65 backdrop-blur-xl border border-white/25 shadow-xl;
   }
   
+  .light-mode .glass-card-ultra-light {
+    @apply bg-white/20 backdrop-blur-xl border border-white/10 shadow-xl;
+  }
+  
   .light-mode .glass-input {
     @apply bg-white/70 backdrop-blur-md border border-white/40;
   }
@@ -113,6 +117,10 @@
   
   .glass-card-lighter {
     @apply bg-black/35 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl;
+  }
+  
+  .glass-card-ultra-light {
+    @apply bg-black/20 backdrop-blur-xl border border-white/5 shadow-xl rounded-2xl;
   }
   
   .glass-input {
