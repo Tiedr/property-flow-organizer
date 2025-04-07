@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -189,7 +188,7 @@
   }
   
   .text-card-content {
-    @apply text-white/90 text-shadow-xs;
+    @apply text-white text-shadow-xs;
   }
   
   .text-shadow-sm {
@@ -198,6 +197,11 @@
   
   .text-shadow-xs {
     text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+  }
+
+  /* Icon color utility */
+  .icon-white svg {
+    @apply text-white;
   }
 }
 

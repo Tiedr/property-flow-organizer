@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import Navbar from "./Navbar";
 
@@ -70,7 +71,7 @@ const Layout = ({ children }: LayoutProps) => {
         <main className="flex-1 p-4 md:p-6 overflow-auto animate-fade-in max-w-[1800px] w-full mx-auto">
           {children}
         </main>
-        <footer className="py-4 text-center text-xs text-white/70 light-mode:text-black/70 border-t border-white/10 light-mode:border-black/10">
+        <footer className="py-4 text-center text-xs text-white border-t border-white/10 light-mode:text-black/70 light-mode:border-black/10">
           <span>© {new Date().getFullYear()} UGHORON. All rights reserved.</span>
         </footer>
       </div>
