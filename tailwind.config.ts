@@ -53,25 +53,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// Add our custom colors for the app
 				estate: {
-					primary: '#2563eb',
-					secondary: '#1e40af',
-					accent: '#bfdbfe',
-					background: '#f8fafc',
-					border: '#e2e8f0',
-					text: '#1e293b',
-					muted: '#64748b',
+					primary: '#ea384c',
+					secondary: '#b91a2e',
+					accent: '#fde4e7',
+					background: '#0a0a0c',
+					border: '#27272a',
+					text: '#f8fafc',
+					muted: '#a1a1aa',
 				}
 			},
 			borderRadius: {

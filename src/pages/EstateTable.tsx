@@ -9,7 +9,9 @@ import {
   Download, 
   FileUp, 
   Plus,
-  Table as TableIcon
+  Table as TableIcon,
+  Calendar,
+  Users
 } from "lucide-react";
 import {
   Dialog,
@@ -120,21 +122,21 @@ const EstateTable = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Estate Management</h1>
+          <h1 className="text-3xl font-bold text-gradient">Estate Management</h1>
           <p className="text-muted-foreground">Manage your estate spreadsheets</p>
         </div>
         <div className="flex flex-wrap mt-4 sm:mt-0 gap-3">
-          <Button variant="outline" onClick={handleExport}>
+          <Button variant="outline" onClick={handleExport} className="glass-input hover:bg-white/10">
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button variant="outline" onClick={handleImport}>
+          <Button variant="outline" onClick={handleImport} className="glass-input hover:bg-white/10">
             <FileUp className="mr-2 h-4 w-4" />
             Import
           </Button>
-          <Button onClick={handleAddEstate}>
+          <Button onClick={handleAddEstate} className="bg-estate-primary hover:bg-estate-secondary text-white">
             <Plus className="mr-2 h-4 w-4" />
             Add Estate Table
           </Button>
@@ -151,31 +153,37 @@ const EstateTable = () => {
             estates.map((estate) => (
               <Card 
                 key={estate.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="glass-card cursor-pointer hover:border-estate-primary/50 transition-all duration-300"
                 onClick={() => handleEstateClick(estate)}
               >
                 <CardHeader>
-                  <CardTitle className="flex items-center">
+                  <CardTitle className="flex items-center text-estate-primary">
                     <TableIcon className="mr-2 h-5 w-5" />
                     {estate.name}
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-muted-foreground">
                     {estate.description || "No description provided"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground">
-                    <div className="flex justify-between mb-1">
-                      <span>Created:</span>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="flex items-center">
+                        <Calendar className="mr-2 h-4 w-4 opacity-70" />
+                        Created:
+                      </span>
                       <span>{new Date(estate.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Entries:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center">
+                        <Users className="mr-2 h-4 w-4 opacity-70" />
+                        Entries:
+                      </span>
                       <span>{estate.entries.length}</span>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="bg-slate-50 rounded-b-lg">
+                <CardFooter className="bg-white/5 rounded-b-lg">
                   <p className="text-sm text-muted-foreground w-full text-center">
                     Click to view estate table
                   </p>
@@ -183,7 +191,7 @@ const EstateTable = () => {
               </Card>
             ))
           ) : (
-            <div className="text-center py-10 col-span-full">
+            <div className="text-center py-10 col-span-full glass p-8 rounded-lg">
               <p className="text-muted-foreground">No estate tables found. Add an estate to get started.</p>
             </div>
           )}
@@ -192,10 +200,10 @@ const EstateTable = () => {
 
       {/* Add Estate Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="glass-card border-estate-primary/20">
           <DialogHeader>
-            <DialogTitle>Create New Estate Table</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-gradient">Create New Estate Table</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Create a new estate spreadsheet to track property records.
             </DialogDescription>
           </DialogHeader>
@@ -208,6 +216,7 @@ const EstateTable = () => {
                 placeholder="Enter estate name" 
                 value={newEstate.name}
                 onChange={handleNewEstateChange}
+                className="glass-input"
               />
             </div>
             <div className="space-y-2">
@@ -218,22 +227,23 @@ const EstateTable = () => {
                 placeholder="Enter estate description (optional)"
                 value={newEstate.description}
                 onChange={handleNewEstateChange}
+                className="glass-input"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateEstate}>Create Estate</Button>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="glass-input">Cancel</Button>
+            <Button onClick={handleCreateEstate} className="bg-estate-primary hover:bg-estate-secondary text-white">Create Estate</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Import Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="glass-card border-estate-primary/20">
           <DialogHeader>
-            <DialogTitle>Import Estate Data</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-gradient">Import Estate Data</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Import your estate data from Excel or XML files.
             </DialogDescription>
           </DialogHeader>
@@ -241,7 +251,7 @@ const EstateTable = () => {
             <p className="text-center text-muted-foreground">Import functionality will be implemented in the next version.</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)} className="glass-input">Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
