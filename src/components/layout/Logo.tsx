@@ -1,35 +1,23 @@
-
 import { useNavigate } from "react-router-dom";
-
 interface LogoProps {
   size?: "sm" | "md" | "lg";
 }
-
 const Logo = ({
   size = "md"
 }: LogoProps) => {
   const navigate = useNavigate();
-  
   const sizeClasses = {
-    sm: "h-5",
-    md: "h-7",
-    lg: "h-9"
+    sm: "h-6",
+    md: "h-8",
+    lg: "h-10"
   };
-  
-  return (
-    <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
+  return <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
       <div className="flex items-center">
-        <img 
-          src="/lovable-uploads/a6d7d39b-e6ea-4c27-a54b-eca85a3137d5.png" 
-          alt="UGHORON DB" 
-          className={`${sizeClasses[size]} mr-2`} 
-        />
+        <img alt="UGHORON DB" className="object-contain" src="/lovable-uploads/2599a9a8-5e42-4df4-b098-b188c2704994.png" />
         <span className={`font-bold ${size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base"} text-white`}>
-          <span className="text-gradient-apple">DB</span>
+          <span className="text-gradient-apple py-0 px-0 mx-0 my-[45px] text-xl">DB</span>
         </span>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Logo;
