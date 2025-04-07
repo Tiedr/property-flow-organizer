@@ -11,7 +11,7 @@ const Layout = ({ children }: LayoutProps) => {
     <div 
       className="flex flex-col min-h-screen bg-cover bg-center bg-fixed" 
       style={{ 
-        backgroundImage: "url('/lovable-uploads/8f61d804-d438-41b4-b789-03349f298064.png')",
+        backgroundImage: "url('/lovable-uploads/de0945d4-540b-4f7d-bab7-896cc83f8657.png')",
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover"
       }}
