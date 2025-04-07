@@ -27,6 +27,7 @@ const ClientForm = ({ client, onSubmit, onCancel }: ClientFormProps) => {
     company: client?.company || "",
     type: client?.type || "Individual",
     status: client?.status || "Active",
+    projects: client?.projects || 0,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
