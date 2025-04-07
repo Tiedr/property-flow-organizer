@@ -12,7 +12,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import EstateForm from "@/components/forms/EstateForm";
 import ImportEstateData from "@/components/data/ImportEstateData";
@@ -53,6 +54,11 @@ const EstateTable = () => {
     
     setEstates((prev) => [newEstate, ...prev]);
     setIsAddDialogOpen(false);
+    
+    toast({
+      title: "Estate Added",
+      description: `Estate for client ${newEstate.clientName} has been added successfully.`
+    });
   };
   
   const handleImportSubmit = (estateData: Omit<Estate, "id">[]) => {
@@ -63,7 +69,52 @@ const EstateTable = () => {
     
     setEstates((prev) => [...newEstates, ...prev]);
     setIsImportDialogOpen(false);
+    
+    toast({
+      title: "Estates Imported",
+      description: `${newEstates.length} estates have been imported successfully.`
+    });
   };
+
+  // Group estates by client name
+  const estatesByClient: Record<string, Estate[]> = {};
+  estates.forEach(estate => {
+    if (!estatesByClient[estate.clientName]) {
+      estatesByClient[estate.clientName] = [];
+    }
+    estatesByClient[estate.clientName].push(estate);
+  });
+
+  const tableColumns = [
+    { key: "uniqueId", header: "ID" },
+    { key: "representative", header: "Representative" },
+    { 
+      key: "plotNumbers", 
+      header: "Plot Numbers",
+      renderCell: (estate: Estate) => estate.plotNumbers.join(", ") 
+    },
+    { 
+      key: "amount", 
+      header: "Amount",
+      renderCell: (estate: Estate) => `₹${estate.amount.toLocaleString()}` 
+    },
+    { 
+      key: "amountPaid", 
+      header: "Amount Paid",
+      renderCell: (estate: Estate) => `₹${estate.amountPaid.toLocaleString()}` 
+    },
+    {
+      key: "documentsReceived",
+      header: "Documents Received",
+      renderCell: (estate: Estate) => 
+        estate.documentsReceived.length > 0 
+          ? estate.documentsReceived.join(", ") 
+          : "None"
+    },
+    { key: "phoneNumber", header: "Phone" },
+    { key: "paymentStatus", header: "Status" },
+    { key: "nextDueDate", header: "Next Due Date" }
+  ];
 
   return (
     <Layout>
@@ -88,46 +139,37 @@ const EstateTable = () => {
         </div>
       </div>
 
-      <DataTable
-        data={estates}
-        columns={[
-          { key: "uniqueId", header: "ID" },
-          { key: "clientName", header: "Client Name" },
-          { key: "representative", header: "Representative" },
-          { 
-            key: "plotNumbers", 
-            header: "Plot Numbers",
-            renderCell: (estate: Estate) => estate.plotNumbers.join(", ") 
-          },
-          { 
-            key: "amount", 
-            header: "Amount",
-            renderCell: (estate: Estate) => `₹${estate.amount.toLocaleString()}` 
-          },
-          { 
-            key: "amountPaid", 
-            header: "Amount Paid",
-            renderCell: (estate: Estate) => `₹${estate.amountPaid.toLocaleString()}` 
-          },
-          {
-            key: "documentsReceived",
-            header: "Documents Received",
-            renderCell: (estate: Estate) => 
-              estate.documentsReceived.length > 0 
-                ? estate.documentsReceived.join(", ") 
-                : "None"
-          },
-          { key: "phoneNumber", header: "Phone" },
-          { key: "paymentStatus", header: "Status" },
-          { key: "nextDueDate", header: "Next Due Date" },
-        ]}
-      />
+      <div className="space-y-10">
+        {Object.keys(estatesByClient).length > 0 ? (
+          Object.entries(estatesByClient).map(([clientName, clientEstates]) => (
+            <div key={clientName} className="border border-estate-border rounded-lg shadow-sm overflow-hidden">
+              <div className="bg-slate-50 border-b border-estate-border p-4">
+                <h2 className="text-xl font-bold">{clientName}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {clientEstates.length} {clientEstates.length === 1 ? 'estate' : 'estates'}
+                </p>
+              </div>
+              <DataTable
+                data={clientEstates}
+                columns={tableColumns}
+              />
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">No estates found. Add an estate to get started.</p>
+          </div>
+        )}
+      </div>
 
       {/* Add Estate Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Add New Estate</DialogTitle>
+            <DialogDescription>
+              Fill out the form below to add a new estate to your records.
+            </DialogDescription>
           </DialogHeader>
           <EstateForm
             onSubmit={handleEstateSubmit}
@@ -141,11 +183,11 @@ const EstateTable = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Import Estate Data</DialogTitle>
+            <DialogDescription>
+              Import your estate data from Excel or XML files. The file should contain columns with headers matching the estate properties.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p className="mb-4 text-muted-foreground">
-              Import your estate data from Excel or XML files. The file should contain columns with headers matching the estate properties.
-            </p>
             <ImportEstateData onImport={handleImportSubmit} />
           </div>
         </DialogContent>
