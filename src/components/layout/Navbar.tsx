@@ -22,9 +22,9 @@ const Navbar = () => {
   };
 
   return (
-    <div className="apple-nav sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+    <div className="apple-nav sticky top-0 z-50 px-4 py-2 flex items-center justify-between">
       <div className="flex items-center">
-        <Logo />
+        <Logo size="sm" />
       </div>
       
       <form onSubmit={handleSearch} className="relative max-w-md w-full hidden md:block mx-4">

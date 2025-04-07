@@ -11,9 +11,9 @@ const Logo = ({
   const navigate = useNavigate();
   
   const sizeClasses = {
-    sm: "h-8",
-    md: "h-10",
-    lg: "h-12"
+    sm: "h-6",
+    md: "h-8",
+    lg: "h-10"
   };
   
   return (
@@ -24,7 +24,7 @@ const Logo = ({
           alt="UGHORON DB" 
           className={`${sizeClasses[size]} mr-2`} 
         />
-        <span className={`font-bold ${size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg"} text-white`}>
+        <span className={`font-bold ${size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base"} text-white`}>
           <span className="text-gradient-apple">DB</span>
         </span>
       </div>

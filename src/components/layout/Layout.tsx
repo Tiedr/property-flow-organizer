@@ -9,7 +9,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div 
-      className="flex flex-col min-h-screen bg-cover bg-center" 
+      className="flex flex-col min-h-screen bg-cover bg-center bg-fixed" 
       style={{ 
         backgroundImage: "url('/lovable-uploads/8f61d804-d438-41b4-b789-03349f298064.png')",
         backgroundRepeat: "no-repeat",
