@@ -23,7 +23,7 @@ const generateEstateEntry = (): EstateEntry => {
     amountPaid: amountPaid,
     documentsReceived: Array.from({ length: faker.number.int({ min: 0, max: 3 }) }, 
       () => faker.helpers.arrayElement(["ID Proof", "Address Proof", "Pan Card", "Aadhar Card"])),
-    phoneNumber: faker.phone.number("+91 ## #### ####"),
+    phoneNumber: faker.phone.number(), // Updated to use default format
     email: faker.internet.email(),
     address: faker.location.streetAddress() + ", " + faker.location.city(),
     paymentStatus: paymentStatus,
