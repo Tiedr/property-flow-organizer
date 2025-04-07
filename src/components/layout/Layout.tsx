@@ -13,7 +13,8 @@ const Layout = ({ children }: LayoutProps) => {
       style={{ 
         backgroundImage: "url('/lovable-uploads/de0945d4-540b-4f7d-bab7-896cc83f8657.png')",
         backgroundRepeat: "no-repeat",
-        backgroundSize: "cover"
+        backgroundSize: "cover",
+        backgroundAttachment: "fixed"
       }}
     >
       <div className="absolute inset-0 backdrop-blur-sm bg-black/20" style={{ zIndex: 0 }}></div>
