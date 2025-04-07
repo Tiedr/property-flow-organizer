@@ -22,16 +22,16 @@ const Navbar = () => {
   };
 
   return (
-    <div className="border-b border-estate-border glass-card bg-transparent p-4 flex items-center justify-between">
+    <div className="apple-nav sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
       <div className="flex items-center">
         <Logo />
       </div>
       
       <form onSubmit={handleSearch} className="relative max-w-md w-full hidden md:block mx-4">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-estate-muted" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-white/50" />
         <Input
           placeholder="Search clients, projects..."
-          className="pl-9 glass-input"
+          className="pl-9 glass-input bg-white/10 h-10 rounded-full"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -39,8 +39,8 @@ const Navbar = () => {
       
       <div className="flex items-center space-x-4">
         <ThemeToggle />
-        <Button variant="ghost" className="p-2 glass-input">
-          <User className="h-5 w-5 text-estate-muted" />
+        <Button variant="ghost" className="rounded-full w-10 h-10 p-2 glass-input">
+          <User className="h-5 w-5 text-white/80" />
         </Button>
       </div>
     </div>

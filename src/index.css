@@ -76,34 +76,52 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
   
   /* Light mode specific overrides */
   .light-mode .glass {
-    @apply bg-white/60 backdrop-blur-md border border-black/10 shadow-lg;
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
   }
   
   .light-mode .glass-card {
-    @apply bg-white/70 backdrop-blur-xl border border-black/5 shadow-xl;
+    @apply bg-white/80 backdrop-blur-xl border border-white/30 shadow-xl;
   }
   
   .light-mode .glass-input {
-    @apply bg-white/50 backdrop-blur-md border border-black/10;
+    @apply bg-white/60 backdrop-blur-md border border-white/30;
+  }
+
+  .light-mode .apple-nav {
+    @apply bg-white/80 backdrop-blur-2xl border-b border-white/20;
+  }
+
+  .light-mode .text-gradient-apple {
+    @apply bg-gradient-to-r from-estate-primary to-red-500 bg-clip-text text-transparent;
   }
 }
 
 /* Glassmorphism utility classes */
 @layer utilities {
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-lg;
+    @apply bg-black/20 backdrop-blur-md border border-white/10 shadow-lg;
   }
   
   .glass-card {
-    @apply bg-black/40 backdrop-blur-xl border border-white/5 shadow-xl;
+    @apply bg-black/30 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl;
   }
   
   .glass-input {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+    @apply bg-black/20 backdrop-blur-md border border-white/10 rounded-xl;
+  }
+
+  .apple-btn {
+    @apply rounded-full px-5 py-2 font-medium transition-all duration-200 ease-out;
+  }
+
+  .apple-nav {
+    @apply bg-black/30 backdrop-blur-2xl border-b border-white/10;
   }
   
   .red-glow {
@@ -112,6 +130,10 @@
   
   .text-gradient {
     @apply bg-gradient-to-r from-estate-primary to-red-400 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-apple {
+    @apply bg-gradient-to-r from-estate-primary to-red-500 bg-clip-text text-transparent;
   }
   
   .ughoron-stripes {
@@ -123,4 +145,18 @@
       #000 66.67%
     );
   }
+}
+
+/* Apple-specific animations */
+@keyframes subtle-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.float-animation {
+  animation: subtle-float 4s ease-in-out infinite;
 }
