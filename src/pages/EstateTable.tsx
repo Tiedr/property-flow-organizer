@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -11,7 +12,8 @@ import {
   Plus,
   Table as TableIcon,
   Calendar,
-  Users
+  Users,
+  Sparkles
 } from "lucide-react";
 import {
   Dialog,
@@ -136,7 +138,7 @@ const EstateTable = () => {
             <FileUp className="mr-2 h-4 w-4" />
             Import
           </Button>
-          <Button onClick={handleAddEstate} className="bg-estate-primary hover:bg-estate-secondary text-white">
+          <Button onClick={handleAddEstate} className="apple-button">
             <Plus className="mr-2 h-4 w-4" />
             Add Estate Table
           </Button>
@@ -148,14 +150,15 @@ const EstateTable = () => {
           <p className="text-muted-foreground">Loading estate tables...</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mb-10">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10">
           {estates.length > 0 ? (
             estates.map((estate) => (
               <Card 
                 key={estate.id} 
-                className="glass-card cursor-pointer hover:border-estate-primary/50 transition-all duration-300"
+                className="glass-card card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden"
                 onClick={() => handleEstateClick(estate)}
               >
+                <div className="absolute h-1 top-0 left-0 right-0 bg-gradient-to-r from-estate-primary to-red-400"></div>
                 <CardHeader>
                   <CardTitle className="flex items-center text-estate-primary">
                     <TableIcon className="mr-2 h-5 w-5" />
@@ -184,7 +187,8 @@ const EstateTable = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="bg-white/5 rounded-b-lg">
-                  <p className="text-sm text-muted-foreground w-full text-center">
+                  <p className="text-sm text-muted-foreground w-full flex items-center justify-center">
+                    <Sparkles className="h-3 w-3 mr-1 text-estate-primary/70" />
                     Click to view estate table
                   </p>
                 </CardFooter>
@@ -200,7 +204,7 @@ const EstateTable = () => {
 
       {/* Add Estate Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="glass-card border-estate-primary/20">
+        <DialogContent className="glass-card border-estate-primary/20 max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gradient">Create New Estate Table</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -232,15 +236,15 @@ const EstateTable = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="glass-input">Cancel</Button>
-            <Button onClick={handleCreateEstate} className="bg-estate-primary hover:bg-estate-secondary text-white">Create Estate</Button>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="apple-button-secondary">Cancel</Button>
+            <Button onClick={handleCreateEstate} className="apple-button">Create Estate</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Import Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="glass-card border-estate-primary/20">
+        <DialogContent className="glass-card border-estate-primary/20 max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gradient">Import Estate Data</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -251,7 +255,7 @@ const EstateTable = () => {
             <p className="text-center text-muted-foreground">Import functionality will be implemented in the next version.</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)} className="glass-input">Close</Button>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)} className="apple-button-secondary">Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

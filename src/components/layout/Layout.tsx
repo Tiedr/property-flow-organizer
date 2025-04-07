@@ -9,15 +9,19 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div 
-      className="flex flex-col min-h-screen bg-cover bg-center bg-fixed" 
+      className="flex flex-col min-h-screen"
       style={{ 
-        backgroundImage: "url('/lovable-uploads/de0945d4-540b-4f7d-bab7-896cc83f8657.png')",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-        backgroundAttachment: "fixed"
+        backgroundImage: `url('/lovable-uploads/de0945d4-540b-4f7d-bab7-896cc83f8657.png'), 
+                          radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.2) 1%, transparent 8%), 
+                          radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.2) 1%, transparent 8%)`,
+        backgroundSize: "cover, 60px 60px, 60px 60px",
+        backgroundPosition: "center, 0 0, 30px 30px",
+        backgroundRepeat: "no-repeat, repeat, repeat",
+        backgroundAttachment: "fixed",
+        backgroundColor: "#111"
       }}
     >
-      <div className="absolute inset-0 backdrop-blur-sm bg-black/20" style={{ zIndex: 0 }}></div>
+      <div className="absolute inset-0 backdrop-blur-sm bg-black/30" style={{ zIndex: 0 }}></div>
       <div className="relative z-10 flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1 p-4 md:p-6 overflow-auto animate-fade-in max-w-[1800px] w-full mx-auto">
