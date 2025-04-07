@@ -1,7 +1,9 @@
-
 import { v4 as uuidv4 } from "uuid";
 import { Estate, EstateEntry } from "@/types";
 import { faker } from '@faker-js/faker';
+
+// Store generated estates to keep them consistent between renders
+let generatedEstates: Estate[] | null = null;
 
 // Generate a random entry for an estate
 const generateEstateEntry = (): EstateEntry => {
@@ -33,7 +35,13 @@ const generateEstateEntry = (): EstateEntry => {
 
 // Generate mock data for estates
 export const generateEstateData = (count: number): Estate[] => {
-  return Array.from({ length: count }, (_, i) => {
+  // Return cached data if available
+  if (generatedEstates) {
+    return generatedEstates;
+  }
+  
+  // Otherwise generate new data
+  generatedEstates = Array.from({ length: count }, (_, i) => {
     const entryCount = faker.number.int({ min: 2, max: 8 });
     
     return {
@@ -45,4 +53,55 @@ export const generateEstateData = (count: number): Estate[] => {
       entries: Array.from({ length: entryCount }, () => generateEstateEntry())
     };
   });
+  
+  return generatedEstates;
+};
+
+// Get a specific estate by ID
+export const getEstateById = (id: string): Estate | undefined => {
+  // Generate data if not already done
+  if (!generatedEstates) {
+    generateEstateData(5);
+  }
+  
+  return generatedEstates?.find(estate => estate.id === id);
+};
+
+// Update an estate in our store
+export const updateEstate = (updatedEstate: Estate): void => {
+  if (!generatedEstates) {
+    return;
+  }
+  
+  const index = generatedEstates.findIndex(e => e.id === updatedEstate.id);
+  if (index !== -1) {
+    generatedEstates[index] = updatedEstate;
+  }
+};
+
+// Create a new estate
+export const createEstate = (estate: Omit<Estate, "id">): Estate => {
+  const newEstate: Estate = {
+    ...estate,
+    id: uuidv4()
+  };
+  
+  if (!generatedEstates) {
+    generatedEstates = [];
+  }
+  
+  generatedEstates.unshift(newEstate);
+  return newEstate;
+};
+
+// Delete an estate
+export const deleteEstate = (id: string): boolean => {
+  if (!generatedEstates) {
+    return false;
+  }
+  
+  const initialLength = generatedEstates.length;
+  generatedEstates = generatedEstates.filter(estate => estate.id !== id);
+  
+  return generatedEstates.length < initialLength;
 };

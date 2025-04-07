@@ -4,7 +4,7 @@ import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Estate } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
-import { v4 as uuidv4 } from "uuid";
+import { generateEstateData, createEstate } from "@/services/estateData";
 import { 
   Download, 
   FileUp, 
@@ -30,7 +30,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { generateEstateData } from "@/services/estateData";
 
 const EstateTable = () => {
   const [estates, setEstates] = useState<Estate[]>([]);
@@ -46,7 +45,6 @@ const EstateTable = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Generate mock data using the updated structure
     setLoading(true);
     try {
       const mockEstates = generateEstateData(5);
@@ -102,14 +100,13 @@ const EstateTable = () => {
       return;
     }
 
-    const newEstateObj: Estate = {
-      id: uuidv4(),
+    const newEstateObj = createEstate({
       name: newEstate.name,
       description: newEstate.description,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       entries: []
-    };
+    });
 
     setEstates(prev => [newEstateObj, ...prev]);
     setNewEstate({ name: '', description: '' });

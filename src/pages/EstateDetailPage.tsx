@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Estate, EstateEntry } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
-import { generateEstateData } from "@/services/estateData";
+import { getEstateById, updateEstate, deleteEstate } from "@/services/estateData";
 import { ArrowLeft, Edit, Trash, Plus, FilePlus, Upload } from "lucide-react";
 import {
   Dialog,
@@ -40,17 +41,20 @@ const EstateDetailPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you'd fetch this estate from an API
-    // For now, we'll generate the mock data and find the estate by id
     const fetchEstate = () => {
       try {
         setLoading(true);
-        // Generate mock data - in a real app this would be a fetch
-        const allEstates = generateEstateData(5);
-        console.log("All estates:", allEstates);
+        if (!id) {
+          toast({
+            title: "Error",
+            description: "Estate ID is missing",
+            variant: "destructive"
+          });
+          return;
+        }
+
         console.log("Looking for estate with ID:", id);
-        
-        const foundEstate = allEstates.find(e => e.id === id);
+        const foundEstate = getEstateById(id);
         console.log("Found estate:", foundEstate);
         
         if (foundEstate) {
@@ -94,6 +98,10 @@ const EstateDetailPage = () => {
   };
 
   const handleDeleteConfirm = () => {
+    if (id) {
+      deleteEstate(id);
+    }
+    
     setIsDeleteDialogOpen(false);
     
     toast({
@@ -118,17 +126,19 @@ const EstateDetailPage = () => {
   const handleEntrySubmit = (entryData: Omit<EstateEntry, "id">) => {
     if (!estate) return;
 
+    let updatedEstate: Estate;
+
     if (selectedEntry) {
       // Edit existing entry
       const updatedEntries = estate.entries.map(entry => 
         entry.id === selectedEntry.id ? { ...entryData, id: entry.id } : entry
       );
 
-      setEstate({
+      updatedEstate = {
         ...estate,
         entries: updatedEntries,
         updatedAt: new Date().toISOString()
-      });
+      };
 
       toast({
         title: "Entry Updated",
@@ -141,11 +151,11 @@ const EstateDetailPage = () => {
         ...entryData
       };
 
-      setEstate({
+      updatedEstate = {
         ...estate,
         entries: [...estate.entries, newEntry],
         updatedAt: new Date().toISOString()
-      });
+      };
 
       toast({
         title: "Entry Added",
@@ -153,6 +163,8 @@ const EstateDetailPage = () => {
       });
     }
 
+    setEstate(updatedEstate);
+    updateEstate(updatedEstate);
     setIsAddEntryDialogOpen(false);
   };
 
@@ -186,11 +198,14 @@ const EstateDetailPage = () => {
 
     const updatedEntries = estate.entries.filter(entry => entry.id !== entryId);
     
-    setEstate({
+    const updatedEstate = {
       ...estate,
       entries: updatedEntries,
       updatedAt: new Date().toISOString()
-    });
+    };
+
+    setEstate(updatedEstate);
+    updateEstate(updatedEstate);
 
     toast({
       title: "Entry Deleted",
@@ -402,3 +417,4 @@ const EstateDetailPage = () => {
 };
 
 export default EstateDetailPage;
+
