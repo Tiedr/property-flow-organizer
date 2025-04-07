@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Estate } from "@/types";
@@ -17,12 +18,19 @@ import {
 import EstateForm from "@/components/forms/EstateForm";
 import ImportEstateData from "@/components/data/ImportEstateData";
 import { v4 as uuidv4 } from "uuid";
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription 
+} from "@/components/ui/card";
 
 const EstateTable = () => {
   const [estates, setEstates] = useState<Estate[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Generate mock data
@@ -75,36 +83,9 @@ const EstateTable = () => {
     });
   };
 
-  const tableColumns = [
-    { key: "clientName", header: "Client Name" },
-    { key: "representative", header: "Representative" },
-    { 
-      key: "plotNumbers", 
-      header: "Plot Numbers",
-      renderCell: (estate: Estate) => estate.plotNumbers.join(", ") 
-    },
-    { 
-      key: "amount", 
-      header: "Amount",
-      renderCell: (estate: Estate) => `₹${estate.amount.toLocaleString()}` 
-    },
-    { 
-      key: "amountPaid", 
-      header: "Amount Paid",
-      renderCell: (estate: Estate) => `₹${estate.amountPaid.toLocaleString()}` 
-    },
-    {
-      key: "documentsReceived",
-      header: "Documents Received",
-      renderCell: (estate: Estate) => 
-        estate.documentsReceived.length > 0 
-          ? estate.documentsReceived.join(", ") 
-          : "None"
-    },
-    { key: "phoneNumber", header: "Phone" },
-    { key: "paymentStatus", header: "Status" },
-    { key: "nextDueDate", header: "Next Due Date" }
-  ];
+  const handleEstateClick = (estate: Estate) => {
+    navigate(`/estates/${estate.id}`);
+  };
 
   return (
     <Layout>
@@ -129,24 +110,48 @@ const EstateTable = () => {
         </div>
       </div>
 
-      <div className="space-y-10">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mb-10">
         {estates.length > 0 ? (
           estates.map((estate) => (
-            <div key={estate.id} className="border border-estate-border rounded-lg shadow-sm overflow-hidden mb-6">
-              <div className="bg-slate-50 border-b border-estate-border p-4">
-                <h2 className="text-xl font-bold">Estate ID: {estate.uniqueId}</h2>
-                <p className="text-sm text-muted-foreground">
-                  Client: {estate.clientName}
-                </p>
-              </div>
-              <DataTable
-                data={[estate]}
-                columns={tableColumns}
-              />
-            </div>
+            <Card 
+              key={estate.id} 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => handleEstateClick(estate)}
+            >
+              <CardHeader>
+                <CardTitle>Estate ID: {estate.uniqueId}</CardTitle>
+                <CardDescription>
+                  <div className="flex flex-col gap-1 mt-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Client:</span>
+                      <span className="text-sm">{estate.clientName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Representative:</span>
+                      <span className="text-sm">{estate.representative || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Amount:</span>
+                      <span className="text-sm">₹{estate.amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Status:</span>
+                      <span className={`text-sm px-2 py-0.5 rounded-full text-xs font-medium ${
+                        estate.paymentStatus === "Paid" ? "bg-green-100 text-green-800" :
+                        estate.paymentStatus === "Partial" ? "bg-amber-100 text-amber-800" :
+                        estate.paymentStatus === "Overdue" ? "bg-red-100 text-red-800" :
+                        "bg-blue-100 text-blue-800"
+                      }`}>
+                        {estate.paymentStatus}
+                      </span>
+                    </div>
+                  </div>
+                </CardDescription>
+              </CardHeader>
+            </Card>
           ))
         ) : (
-          <div className="text-center py-10">
+          <div className="text-center py-10 col-span-full">
             <p className="text-muted-foreground">No estates found. Add an estate to get started.</p>
           </div>
         )}
