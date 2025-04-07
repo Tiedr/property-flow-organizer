@@ -66,6 +66,6 @@
   }
   
   .text-gradient {
-    @apply bg-gradient-to-r from-estate.primary to-red-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-estate-primary to-red-400 bg-clip-text text-transparent;
   }
 }
