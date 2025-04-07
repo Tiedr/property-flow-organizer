@@ -95,10 +95,11 @@ const EstateTable = () => {
       description: `Estate "${newEstate.name}" has been created successfully.`
     });
   };
+
   return <Layout>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gradient text-slate-50">Estate Management</h1>
+          <h1 className="text-3xl font-bold text-white">Estate Management</h1>
           <p className="text-slate-200">Manage your estate spreadsheets</p>
         </div>
         <div className="flex flex-wrap mt-4 sm:mt-0 gap-3">
@@ -120,9 +121,9 @@ const EstateTable = () => {
       {loading ? <div className="text-center py-10">
           <p className="text-muted-foreground">Loading estate tables...</p>
         </div> : <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10 rounded-none">
-          {estates.length > 0 ? estates.map(estate => <Card key={estate.id} onClick={() => handleEstateClick(estate)} className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border-2 border-white/70 shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+          {estates.length > 0 ? estates.map(estate => <Card key={estate.id} onClick={() => handleEstateClick(estate)} className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border-3 border-white shadow-[0_0_8px_rgba(255,255,255,0.6)]">
                 <CardHeader>
-                  <CardTitle className="flex items-center text-[#fff0f1]">
+                  <CardTitle className="flex items-center text-white">
                     <TableIcon className="mr-2 h-5 w-5" />
                     {estate.name}
                   </CardTitle>
@@ -154,7 +155,7 @@ const EstateTable = () => {
                     Click to view estate table
                   </p>
                 </CardFooter>
-              </Card>) : <div className="text-center py-10 col-span-full glass p-8 rounded-lg">
+              </Card>) : <div className="text-center py-10 col-span-full glass p-8 rounded-lg border-2 border-white">
               <p className="text-muted-foreground">No estate tables found. Add an estate to get started.</p>
             </div>}
         </div>}

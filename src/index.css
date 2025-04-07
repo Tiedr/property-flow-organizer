@@ -93,7 +93,7 @@
   }
   
   .light-mode .glass-input {
-    @apply bg-white/70 backdrop-blur-md border border-white/40;
+    @apply bg-white/70 backdrop-blur-md border border-black/70;
   }
 
   .light-mode .apple-nav {
@@ -125,19 +125,19 @@
   }
   
   .glass-card {
-    @apply bg-black/40 backdrop-blur-xl border border-white/15 shadow-xl rounded-2xl;
+    @apply bg-black/40 backdrop-blur-xl border-2 border-white shadow-xl rounded-2xl;
   }
   
   .glass-card-lighter {
-    @apply bg-black/35 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl;
+    @apply bg-black/35 backdrop-blur-xl border-2 border-white shadow-xl rounded-2xl;
   }
   
   .glass-card-ultra-light {
-    @apply bg-black/20 backdrop-blur-xl border border-white/5 shadow-xl rounded-2xl;
+    @apply bg-black/20 backdrop-blur-xl border-2 border-white shadow-xl rounded-2xl;
   }
   
   .glass-input {
-    @apply bg-black/30 backdrop-blur-md border border-white/15 rounded-xl;
+    @apply bg-black/30 backdrop-blur-md border-2 border-white rounded-xl;
   }
 
   .apple-btn {

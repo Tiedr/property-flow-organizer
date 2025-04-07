@@ -28,10 +28,10 @@ const Navbar = () => {
       </div>
       
       <form onSubmit={handleSearch} className="relative max-w-md w-full hidden md:block mx-4">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-white" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-white light-mode:text-black" />
         <Input
           placeholder="Search clients, projects..."
-          className="pl-9 glass-input h-10 rounded-full text-white"
+          className="pl-9 glass-input h-10 rounded-full text-white light-mode:text-black light-mode:placeholder:text-black/70"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
