@@ -31,7 +31,7 @@ const Navbar = () => {
         <Search className="absolute left-3 top-3 h-4 w-4 text-white light-mode:text-black" />
         <Input
           placeholder="Search clients, projects..."
-          className="pl-9 glass-input h-10 rounded-full text-white light-mode:text-black light-mode:placeholder:text-black/70"
+          className="pl-9 glass-input h-10 rounded-full text-black light-mode:text-black light-mode:placeholder:text-black/70"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
