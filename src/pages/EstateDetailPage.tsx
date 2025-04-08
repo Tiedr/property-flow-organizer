@@ -242,7 +242,7 @@ const EstateDetailPage = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gradient text-slate-50">{estate?.name}</h1>
+            <h1 className="text-3xl font-bold text-white">{estate?.name}</h1>
             <p className="text-muted-foreground">
               Created: {estate && new Date(estate.createdAt).toLocaleDateString()} | 
               Last Updated: {estate && new Date(estate.updatedAt).toLocaleDateString()}
