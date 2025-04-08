@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -113,6 +112,54 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    else if (action === "promote") {
+      if (!userData.email) {
+        return new Response(
+          JSON.stringify({ error: "Email is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Get user by email
+      const { data: users, error: getUserError } = await supabaseClient.auth.admin.listUsers();
+      
+      if (getUserError) {
+        return new Response(
+          JSON.stringify({ error: getUserError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      const targetUser = users.users.find(u => u.email === userData.email);
+      
+      if (!targetUser) {
+        return new Response(
+          JSON.stringify({ error: "User not found with this email" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Update user's admin status
+      const { error: updateProfileError } = await supabaseClient
+        .from("profiles")
+        .update({ is_admin: true })
+        .eq("id", targetUser.id);
+      
+      if (updateProfileError) {
+        return new Response(
+          JSON.stringify({ error: updateProfileError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `User ${userData.email} has been promoted to admin` 
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

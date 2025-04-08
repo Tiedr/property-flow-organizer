@@ -9,6 +9,7 @@ import EstateDetailPage from "./pages/EstateDetailPage";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
+import PromoteAdmin from "./pages/PromoteAdmin";
 import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard";
 
@@ -37,6 +38,9 @@ const App = () => (
               <AuthGuard requireAdmin={true}>
                 <UserManagement />
               </AuthGuard>
+            } />
+            <Route path="/promote-admin" element={
+              <PromoteAdmin />
             } />
             <Route path="*" element={<NotFound />} />
           </Routes>
