@@ -18,7 +18,7 @@ export const getAllEstates = async (): Promise<Estate[]> => {
 
     // Fetch entries for each estate
     const estatesWithEntries = await Promise.all(
-      estates.map(async (estate) => {
+      (estates || []).map(async (estate) => {
         const { data: entries, error: entriesError } = await supabase
           .from('estate_entries')
           .select('*')
@@ -26,10 +26,39 @@ export const getAllEstates = async (): Promise<Estate[]> => {
         
         if (entriesError) {
           console.error("Error fetching entries:", entriesError);
-          return { ...estate, entries: [] };
+          return {
+            ...estate,
+            entries: [],
+            createdAt: estate.created_at,
+            updatedAt: estate.updated_at
+          };
         }
         
-        return { ...estate, entries: entries || [] };
+        // Map the database fields to our application model
+        const mappedEntries = entries ? entries.map(entry => ({
+          id: entry.id,
+          clientName: entry.client_name,
+          uniqueId: entry.unique_id || "",
+          representative: entry.representative || "",
+          plotNumbers: entry.plot_numbers || [],
+          amount: entry.amount,
+          amountPaid: entry.amount_paid,
+          documentsReceived: entry.documents_received || [],
+          phoneNumber: entry.phone_number || "",
+          email: entry.email || "",
+          address: entry.address || "",
+          paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+          nextDueDate: entry.next_due_date || ""
+        })) : [];
+        
+        return {
+          id: estate.id,
+          name: estate.name,
+          description: estate.description || "",
+          createdAt: estate.created_at,
+          updatedAt: estate.updated_at,
+          entries: mappedEntries
+        };
       })
     );
     
@@ -62,7 +91,31 @@ export const getEstateById = async (id: string): Promise<Estate | undefined> => 
       throw entriesError;
     }
     
-    return { ...estate, entries: entries || [] };
+    // Map the entries
+    const mappedEntries = entries ? entries.map(entry => ({
+      id: entry.id,
+      clientName: entry.client_name,
+      uniqueId: entry.unique_id || "",
+      representative: entry.representative || "",
+      plotNumbers: entry.plot_numbers || [],
+      amount: entry.amount,
+      amountPaid: entry.amount_paid,
+      documentsReceived: entry.documents_received || [],
+      phoneNumber: entry.phone_number || "",
+      email: entry.email || "",
+      address: entry.address || "",
+      paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+      nextDueDate: entry.next_due_date || ""
+    })) : [];
+    
+    return {
+      id: estate.id,
+      name: estate.name,
+      description: estate.description || "",
+      createdAt: estate.created_at,
+      updatedAt: estate.updated_at,
+      entries: mappedEntries
+    };
     
   } catch (error) {
     console.error("Error fetching estate:", error);
@@ -115,7 +168,18 @@ export const createEstate = async (estate: Omit<Estate, "id" | "entries">): Prom
       throw error;
     }
     
-    return { ...data, entries: [] };
+    if (!data) {
+      throw new Error("No data returned from insert operation");
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description || "",
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      entries: []
+    };
   } catch (error) {
     console.error("Error creating estate:", error);
     throw error;
@@ -173,6 +237,10 @@ export const createEstateEntry = async (
       throw error;
     }
     
+    if (!data) {
+      throw new Error("No data returned from insert operation");
+    }
+    
     // Map the database fields to our application model
     return {
       id: data.id,
@@ -224,6 +292,10 @@ export const updateEstateEntry = async (
     
     if (error) {
       throw error;
+    }
+    
+    if (!data) {
+      throw new Error("No data returned from update operation");
     }
     
     // Map the database fields to our application model

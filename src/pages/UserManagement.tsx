@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -47,11 +46,11 @@ const UserManagement = () => {
       // Since we can't directly query auth.users, we'll use a placeholder
       // In a real app, this would be done through a secure admin API endpoint
       
-      const userProfiles = profiles.map(profile => ({
+      const userProfiles = (profiles || []).map(profile => ({
         id: profile.id,
         email: "Loading...", // This would be filled by admin API
         full_name: profile.full_name,
-        is_admin: profile.is_admin,
+        is_admin: profile.is_admin || false,
         created_at: profile.created_at
       }));
       
