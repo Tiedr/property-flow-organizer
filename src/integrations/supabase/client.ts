@@ -18,18 +18,29 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 });
 
 // Enable realtime for tables that need to sync across users
-(async () => {
-  await supabase
-    .from('estates')
-    .on('*', () => {
-      console.log('Estates table changed');
-    })
-    .subscribe();
-    
-  await supabase
-    .from('estate_entries')
-    .on('*', () => {
-      console.log('Estate entries table changed');
-    })
-    .subscribe();
-})();
+const channel = supabase.channel('db-changes');
+
+channel
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'estates'
+    },
+    (payload) => {
+      console.log('Estates table changed:', payload);
+    }
+  )
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'estate_entries'
+    },
+    (payload) => {
+      console.log('Estate entries table changed:', payload);
+    }
+  )
+  .subscribe();
