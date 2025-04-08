@@ -297,8 +297,8 @@ const EstateDetailPage = () => {
                     <TableCell>{entry.uniqueId}</TableCell>
                     <TableCell>{entry.clientName}</TableCell>
                     <TableCell>{entry.plotNumbers.join(", ")}</TableCell>
-                    <TableCell>₹{entry.amount.toLocaleString()}</TableCell>
-                    <TableCell>₹{entry.amountPaid.toLocaleString()}</TableCell>
+                    <TableCell>₦{entry.amount.toLocaleString()}</TableCell>
+                    <TableCell>₦{entry.amountPaid.toLocaleString()}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${entry.paymentStatus === "Paid" ? "bg-green-500/20 text-green-300" : entry.paymentStatus === "Partial" ? "bg-amber-500/20 text-amber-300" : entry.paymentStatus === "Overdue" ? "bg-red-500/20 text-red-300" : "bg-blue-500/20 text-blue-300"}`}>
                         {entry.paymentStatus}
