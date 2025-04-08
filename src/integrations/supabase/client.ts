@@ -9,4 +9,27 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});
+
+// Enable realtime for tables that need to sync across users
+(async () => {
+  await supabase
+    .from('estates')
+    .on('*', () => {
+      console.log('Estates table changed');
+    })
+    .subscribe();
+    
+  await supabase
+    .from('estate_entries')
+    .on('*', () => {
+      console.log('Estate entries table changed');
+    })
+    .subscribe();
+})();
