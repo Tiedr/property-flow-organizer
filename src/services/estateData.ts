@@ -1,11 +1,289 @@
-import { v4 as uuidv4 } from "uuid";
+
+import { supabase } from "@/integrations/supabase/client";
 import { Estate, EstateEntry } from "@/types";
+import { v4 as uuidv4 } from "uuid";
 import { faker } from '@faker-js/faker';
 
-// Store generated estates to keep them consistent between renders
-let generatedEstates: Estate[] | null = null;
+// Function to fetch all estates
+export const getAllEstates = async (): Promise<Estate[]> => {
+  try {
+    const { data: estates, error } = await supabase
+      .from('estates')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      throw error;
+    }
 
-// Generate a random entry for an estate
+    // Fetch entries for each estate
+    const estatesWithEntries = await Promise.all(
+      estates.map(async (estate) => {
+        const { data: entries, error: entriesError } = await supabase
+          .from('estate_entries')
+          .select('*')
+          .eq('estate_id', estate.id);
+        
+        if (entriesError) {
+          console.error("Error fetching entries:", entriesError);
+          return { ...estate, entries: [] };
+        }
+        
+        return { ...estate, entries: entries || [] };
+      })
+    );
+    
+    return estatesWithEntries;
+  } catch (error) {
+    console.error("Error fetching estates:", error);
+    throw error;
+  }
+};
+
+// Function to get a specific estate by ID
+export const getEstateById = async (id: string): Promise<Estate | undefined> => {
+  try {
+    const { data: estate, error } = await supabase
+      .from('estates')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    const { data: entries, error: entriesError } = await supabase
+      .from('estate_entries')
+      .select('*')
+      .eq('estate_id', id);
+    
+    if (entriesError) {
+      throw entriesError;
+    }
+    
+    return { ...estate, entries: entries || [] };
+    
+  } catch (error) {
+    console.error("Error fetching estate:", error);
+    throw error;
+  }
+};
+
+// Update an estate in our store
+export const updateEstate = async (updatedEstate: Estate): Promise<Estate> => {
+  try {
+    // First, update the estate record
+    const { error: estateError } = await supabase
+      .from('estates')
+      .update({
+        name: updatedEstate.name,
+        description: updatedEstate.description,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', updatedEstate.id);
+    
+    if (estateError) {
+      throw estateError;
+    }
+    
+    // Handle entries updates separately if needed
+    // This would be better done through more specific functions
+    
+    return updatedEstate;
+  } catch (error) {
+    console.error("Error updating estate:", error);
+    throw error;
+  }
+};
+
+// Create a new estate
+export const createEstate = async (estate: Omit<Estate, "id" | "entries">): Promise<Estate> => {
+  try {
+    const { data, error } = await supabase
+      .from('estates')
+      .insert({
+        name: estate.name,
+        description: estate.description,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { ...data, entries: [] };
+  } catch (error) {
+    console.error("Error creating estate:", error);
+    throw error;
+  }
+};
+
+// Delete an estate
+export const deleteEstate = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('estates')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting estate:", error);
+    throw error;
+  }
+};
+
+// Create a new estate entry
+export const createEstateEntry = async (
+  estateId: string, 
+  entry: Omit<EstateEntry, "id">
+): Promise<EstateEntry> => {
+  try {
+    const { data, error } = await supabase
+      .from('estate_entries')
+      .insert({
+        estate_id: estateId,
+        client_name: entry.clientName,
+        unique_id: entry.uniqueId,
+        representative: entry.representative,
+        plot_numbers: entry.plotNumbers,
+        amount: entry.amount,
+        amount_paid: entry.amountPaid,
+        documents_received: entry.documentsReceived,
+        phone_number: entry.phoneNumber,
+        email: entry.email,
+        address: entry.address,
+        payment_status: entry.paymentStatus,
+        next_due_date: entry.nextDueDate,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Map the database fields to our application model
+    return {
+      id: data.id,
+      clientName: data.client_name,
+      uniqueId: data.unique_id || "",
+      representative: data.representative || "",
+      plotNumbers: data.plot_numbers || [],
+      amount: data.amount,
+      amountPaid: data.amount_paid,
+      documentsReceived: data.documents_received || [],
+      phoneNumber: data.phone_number || "",
+      email: data.email || "",
+      address: data.address || "",
+      paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+      nextDueDate: data.next_due_date || ""
+    };
+  } catch (error) {
+    console.error("Error creating estate entry:", error);
+    throw error;
+  }
+};
+
+// Update an estate entry
+export const updateEstateEntry = async (
+  entryId: string, 
+  entry: Omit<EstateEntry, "id">
+): Promise<EstateEntry> => {
+  try {
+    const { data, error } = await supabase
+      .from('estate_entries')
+      .update({
+        client_name: entry.clientName,
+        unique_id: entry.uniqueId,
+        representative: entry.representative,
+        plot_numbers: entry.plotNumbers,
+        amount: entry.amount,
+        amount_paid: entry.amountPaid,
+        documents_received: entry.documentsReceived,
+        phone_number: entry.phoneNumber,
+        email: entry.email,
+        address: entry.address,
+        payment_status: entry.paymentStatus,
+        next_due_date: entry.nextDueDate,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', entryId)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Map the database fields to our application model
+    return {
+      id: data.id,
+      clientName: data.client_name,
+      uniqueId: data.unique_id || "",
+      representative: data.representative || "",
+      plotNumbers: data.plot_numbers || [],
+      amount: data.amount,
+      amountPaid: data.amount_paid,
+      documentsReceived: data.documents_received || [],
+      phoneNumber: data.phone_number || "",
+      email: data.email || "",
+      address: data.address || "",
+      paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+      nextDueDate: data.next_due_date || ""
+    };
+  } catch (error) {
+    console.error("Error updating estate entry:", error);
+    throw error;
+  }
+};
+
+// Delete an estate entry
+export const deleteEstateEntry = async (entryId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('estate_entries')
+      .delete()
+      .eq('id', entryId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting estate entry:", error);
+    throw error;
+  }
+};
+
+// Generate placeholder data for testing
+export const generateEstateData = (count: number): Estate[] => {
+  return Array.from({ length: count }, (_, i) => {
+    const entryCount = faker.number.int({ min: 2, max: 8 });
+    
+    return {
+      id: uuidv4(),
+      name: `Estate ${faker.company.name()}`,
+      description: faker.company.catchPhrase(),
+      createdAt: faker.date.past().toISOString(),
+      updatedAt: faker.date.recent().toISOString(),
+      entries: Array.from({ length: entryCount }, () => generateEstateEntry())
+    };
+  });
+};
+
+// Generate a random entry for testing
 const generateEstateEntry = (): EstateEntry => {
   const amount = faker.number.int({ min: 100000, max: 10000000 });
   const amountPaid = faker.number.int({ min: 0, max: amount });
@@ -25,83 +303,10 @@ const generateEstateEntry = (): EstateEntry => {
     amountPaid: amountPaid,
     documentsReceived: Array.from({ length: faker.number.int({ min: 0, max: 3 }) }, 
       () => faker.helpers.arrayElement(["ID Proof", "Address Proof", "Pan Card", "Aadhar Card"])),
-    phoneNumber: faker.phone.number(), // Updated to use default format
+    phoneNumber: faker.phone.number(),
     email: faker.internet.email(),
     address: faker.location.streetAddress() + ", " + faker.location.city(),
     paymentStatus: paymentStatus,
     nextDueDate: faker.date.future().toISOString().split('T')[0]
   };
-};
-
-// Generate mock data for estates
-export const generateEstateData = (count: number): Estate[] => {
-  // Return cached data if available
-  if (generatedEstates) {
-    return generatedEstates;
-  }
-  
-  // Otherwise generate new data
-  generatedEstates = Array.from({ length: count }, (_, i) => {
-    const entryCount = faker.number.int({ min: 2, max: 8 });
-    
-    return {
-      id: uuidv4(),
-      name: `Estate ${faker.company.name()}`,
-      description: faker.company.catchPhrase(),
-      createdAt: faker.date.past().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
-      entries: Array.from({ length: entryCount }, () => generateEstateEntry())
-    };
-  });
-  
-  return generatedEstates;
-};
-
-// Get a specific estate by ID
-export const getEstateById = (id: string): Estate | undefined => {
-  // Generate data if not already done
-  if (!generatedEstates) {
-    generateEstateData(5);
-  }
-  
-  return generatedEstates?.find(estate => estate.id === id);
-};
-
-// Update an estate in our store
-export const updateEstate = (updatedEstate: Estate): void => {
-  if (!generatedEstates) {
-    return;
-  }
-  
-  const index = generatedEstates.findIndex(e => e.id === updatedEstate.id);
-  if (index !== -1) {
-    generatedEstates[index] = updatedEstate;
-  }
-};
-
-// Create a new estate
-export const createEstate = (estate: Omit<Estate, "id">): Estate => {
-  const newEstate: Estate = {
-    ...estate,
-    id: uuidv4()
-  };
-  
-  if (!generatedEstates) {
-    generatedEstates = [];
-  }
-  
-  generatedEstates.unshift(newEstate);
-  return newEstate;
-};
-
-// Delete an estate
-export const deleteEstate = (id: string): boolean => {
-  if (!generatedEstates) {
-    return false;
-  }
-  
-  const initialLength = generatedEstates.length;
-  generatedEstates = generatedEstates.filter(estate => estate.id !== id);
-  
-  return generatedEstates.length < initialLength;
 };

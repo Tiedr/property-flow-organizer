@@ -9,7 +9,119 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      estate_entries: {
+        Row: {
+          address: string | null
+          amount: number
+          amount_paid: number
+          client_name: string
+          created_at: string
+          documents_received: string[] | null
+          email: string | null
+          estate_id: string
+          id: string
+          next_due_date: string | null
+          payment_status: string
+          phone_number: string | null
+          plot_numbers: string[] | null
+          representative: string | null
+          unique_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          amount?: number
+          amount_paid?: number
+          client_name: string
+          created_at?: string
+          documents_received?: string[] | null
+          email?: string | null
+          estate_id: string
+          id?: string
+          next_due_date?: string | null
+          payment_status?: string
+          phone_number?: string | null
+          plot_numbers?: string[] | null
+          representative?: string | null
+          unique_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          amount?: number
+          amount_paid?: number
+          client_name?: string
+          created_at?: string
+          documents_received?: string[] | null
+          email?: string | null
+          estate_id?: string
+          id?: string
+          next_due_date?: string | null
+          payment_status?: string
+          phone_number?: string | null
+          plot_numbers?: string[] | null
+          representative?: string | null
+          unique_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estate_entries_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          is_admin: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          is_admin?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
