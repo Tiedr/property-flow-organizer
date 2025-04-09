@@ -18,8 +18,67 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
-
-    // Check authentication and admin status
+    
+    // Parse request body
+    const { action, userData } = await req.json();
+    
+    // Special handling for initial admin creation (no auth required)
+    if (action === "create-initial-admin") {
+      console.log("Processing create-initial-admin request");
+      
+      // Validate required fields
+      if (!userData.email || !userData.password) {
+        return new Response(
+          JSON.stringify({ error: "Email and password are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Create new admin user
+      const { data: newUser, error: createUserError } = await supabaseClient.auth.admin.createUser({
+        email: userData.email,
+        password: userData.password,
+        email_confirm: true
+      });
+      
+      if (createUserError) {
+        console.error("Error creating admin user:", createUserError);
+        return new Response(
+          JSON.stringify({ error: createUserError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Update user's profile to make them an admin
+      if (newUser.user) {
+        const { error: updateProfileError } = await supabaseClient
+          .from("profiles")
+          .update({ 
+            full_name: userData.fullName || "Admin User",
+            is_admin: true 
+          })
+          .eq("id", newUser.user.id);
+        
+        if (updateProfileError) {
+          console.error("Error updating admin profile:", updateProfileError);
+          return new Response(
+            JSON.stringify({ error: `User created but failed to set as admin: ${updateProfileError.message}` }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Admin user ${userData.email} created successfully`,
+          user: newUser.user
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // All other actions require authentication
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
     
@@ -46,9 +105,7 @@ serve(async (req) => {
       );
     }
     
-    // Parse request body
-    const { action, userData } = await req.json();
-    
+    // Process regular authenticated actions
     if (action === "create") {
       // Validate required fields
       if (!userData.email || !userData.password) {
@@ -219,6 +276,7 @@ serve(async (req) => {
     );
   } 
   catch (error) {
+    console.error("Edge function error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

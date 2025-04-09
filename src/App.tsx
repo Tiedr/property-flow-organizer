@@ -46,6 +46,8 @@ const App = () => (
             <Route path="/reset-password" element={
               <ResetPassword />
             } />
+            {/* Add a redirect from /admin-setup for convenience */}
+            <Route path="/admin-setup" element={<Navigate to="/reset-password" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

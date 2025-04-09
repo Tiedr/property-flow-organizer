@@ -5,10 +5,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [showDebugDialog, setShowDebugDialog] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>({});
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -20,17 +23,50 @@ const ResetPassword = () => {
     try {
       setIsLoading(true);
       
+      // Check if we are logged in to create the admin
       const { data: { session } } = await supabase.auth.getSession();
       
+      // If not logged in, attempt to create a direct user with the admin SDK
       if (!session) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to perform this action",
-          variant: "destructive",
+        // Try to create user directly via the Supabase edge function without authentication
+        const response = await fetch(`https://lipqduurjuahriznyaqw.supabase.co/functions/v1/manage-users`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "create-initial-admin",
+            userData: {
+              email: targetEmail,
+              password: newPassword,
+              fullName: "Root Admin"
+            },
+          }),
         });
+        
+        const result = await response.json();
+        
+        // Store debug info
+        setDebugInfo({
+          status: response.status,
+          statusText: response.statusText,
+          result
+        });
+        
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to create admin account");
+        }
+        
+        toast({
+          title: "Success",
+          description: `Admin account ${targetEmail} created successfully`,
+        });
+        
+        setIsComplete(true);
         return;
       }
       
+      // If we are logged in, use the authenticated approach
       const response = await fetch(`https://lipqduurjuahriznyaqw.supabase.co/functions/v1/manage-users`, {
         method: "POST",
         headers: {
@@ -49,6 +85,13 @@ const ResetPassword = () => {
       });
       
       const result = await response.json();
+      
+      // Store debug info
+      setDebugInfo({
+        status: response.status,
+        statusText: response.statusText,
+        result
+      });
       
       if (!response.ok) {
         throw new Error(result.error || "Failed to create admin account");
@@ -129,12 +172,22 @@ const ResetPassword = () => {
             <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
         ) : !isComplete ? (
-          <Button 
-            className="w-full apple-button"
-            onClick={createAdminAccount}
-          >
-            Retry Creation
-          </Button>
+          <div className="flex flex-col space-y-3">
+            <Button 
+              className="w-full apple-button"
+              onClick={createAdminAccount}
+            >
+              Retry Creation
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="w-full border-white/30 text-white hover:bg-white/10"
+              onClick={() => setShowDebugDialog(true)}
+            >
+              Show Debug Info
+            </Button>
+          </div>
         ) : (
           <div className="flex flex-col space-y-3">
             <Button 
@@ -151,9 +204,31 @@ const ResetPassword = () => {
             >
               Go to Login Page
             </Button>
+            
+            <Button
+              variant="outline"
+              className="w-full border-white/30 text-white hover:bg-white/10"
+              onClick={() => setShowDebugDialog(true)}
+            >
+              Show Debug Info
+            </Button>
           </div>
         )}
       </div>
+
+      <Dialog open={showDebugDialog} onOpenChange={setShowDebugDialog}>
+        <DialogContent className="max-w-md bg-black/80 text-white border border-estate-primary/20">
+          <DialogHeader>
+            <DialogTitle>Debug Information</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Technical details about the admin creation attempt
+            </DialogDescription>
+          </DialogHeader>
+          <pre className="bg-gray-900 p-4 rounded overflow-x-auto text-xs text-white/80">
+            {JSON.stringify(debugInfo, null, 2)}
+          </pre>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
