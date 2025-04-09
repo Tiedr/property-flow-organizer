@@ -12,11 +12,11 @@ const ResetPassword = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Target email and new password
-  const targetEmail = "admin@ughoron.com";
-  const newPassword = "UghoronAdmin2024"; // New password
+  // Target email and password for new admin
+  const targetEmail = "root@ughoron.com";
+  const newPassword = "UghoronAdmin2024"; // Password for new admin
 
-  const resetPassword = async () => {
+  const createAdminAccount = async () => {
     try {
       setIsLoading(true);
       
@@ -38,10 +38,12 @@ const ResetPassword = () => {
           "Authorization": `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          action: "reset-password",
+          action: "create",
           userData: {
             email: targetEmail,
-            newPassword: newPassword
+            password: newPassword,
+            isAdmin: true,
+            fullName: "Root Admin"
           },
         }),
       });
@@ -49,20 +51,20 @@ const ResetPassword = () => {
       const result = await response.json();
       
       if (!response.ok) {
-        throw new Error(result.error || "Failed to reset password");
+        throw new Error(result.error || "Failed to create admin account");
       }
       
       toast({
         title: "Success",
-        description: result.message || "Password reset successfully",
+        description: `Admin account ${targetEmail} created successfully`,
       });
       
       setIsComplete(true);
     } catch (error) {
-      console.error("Error resetting password:", error);
+      console.error("Error creating admin account:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to reset password",
+        description: error.message || "Failed to create admin account",
         variant: "destructive",
       });
     } finally {
@@ -70,7 +72,7 @@ const ResetPassword = () => {
     }
   };
 
-  // Try to login with the new credentials to verify the reset worked
+  // Try to login with the new credentials
   const tryLogin = async () => {
     try {
       setIsLoading(true);
@@ -90,7 +92,7 @@ const ResetPassword = () => {
       
       toast({
         title: "Login Successful",
-        description: "You've been logged in with the new password",
+        description: "You've been logged in with the new admin account",
       });
       
       // Redirect to home page after successful login
@@ -107,19 +109,19 @@ const ResetPassword = () => {
     }
   };
   
-  // Run the password reset automatically when the component loads
+  // Run the account creation automatically when the component loads
   useEffect(() => {
-    resetPassword();
+    createAdminAccount();
   }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-estate-background-dark to-estate-background">
       <div className="w-full max-w-md p-6 glass-card-ultra-light rounded-lg border border-estate-primary/20">
-        <h1 className="text-2xl font-bold text-white mb-4">Password Reset</h1>
+        <h1 className="text-2xl font-bold text-white mb-4">Create Admin Account</h1>
         <p className="text-white mb-6">
           {isComplete 
-            ? `Password for ${targetEmail} has been reset to "${newPassword}".`
-            : `Resetting password for ${targetEmail}...`}
+            ? `Admin account ${targetEmail} has been created with password "${newPassword}".`
+            : `Creating admin account for ${targetEmail}...`}
         </p>
         
         {isLoading ? (
@@ -129,9 +131,9 @@ const ResetPassword = () => {
         ) : !isComplete ? (
           <Button 
             className="w-full apple-button"
-            onClick={resetPassword}
+            onClick={createAdminAccount}
           >
-            Retry Reset
+            Retry Creation
           </Button>
         ) : (
           <div className="flex flex-col space-y-3">
@@ -139,7 +141,7 @@ const ResetPassword = () => {
               className="w-full apple-button"
               onClick={tryLogin}
             >
-              Login with New Password
+              Login with New Admin
             </Button>
             
             <Button 
