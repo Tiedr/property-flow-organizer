@@ -23,62 +23,17 @@ const ResetPassword = () => {
     try {
       setIsLoading(true);
       
-      // Check if we are logged in to create the admin
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // If not logged in, attempt to create a direct user with the admin SDK
-      if (!session) {
-        // Try to create user directly via the Supabase edge function without authentication
-        const response = await fetch(`https://lipqduurjuahriznyaqw.supabase.co/functions/v1/manage-users`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: "create-initial-admin",
-            userData: {
-              email: targetEmail,
-              password: newPassword,
-              fullName: "Root Admin"
-            },
-          }),
-        });
-        
-        const result = await response.json();
-        
-        // Store debug info
-        setDebugInfo({
-          status: response.status,
-          statusText: response.statusText,
-          result
-        });
-        
-        if (!response.ok) {
-          throw new Error(result.error || "Failed to create admin account");
-        }
-        
-        toast({
-          title: "Success",
-          description: `Admin account ${targetEmail} created successfully`,
-        });
-        
-        setIsComplete(true);
-        return;
-      }
-      
-      // If we are logged in, use the authenticated approach
+      // Try to create user directly via the Supabase edge function without authentication
       const response = await fetch(`https://lipqduurjuahriznyaqw.supabase.co/functions/v1/manage-users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          action: "create",
+          action: "create-initial-admin",
           userData: {
             email: targetEmail,
             password: newPassword,
-            isAdmin: true,
             fullName: "Root Admin"
           },
         }),
