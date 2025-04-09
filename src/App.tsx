@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
 import PromoteAdmin from "./pages/PromoteAdmin";
+import ResetPassword from "./pages/ResetPassword";
 import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard";
 
@@ -41,6 +42,9 @@ const App = () => (
             } />
             <Route path="/promote-admin" element={
               <PromoteAdmin />
+            } />
+            <Route path="/reset-password" element={
+              <ResetPassword />
             } />
             <Route path="*" element={<NotFound />} />
           </Routes>

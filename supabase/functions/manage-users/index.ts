@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -159,6 +160,54 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: `User ${userData.email} has been promoted to admin` 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    else if (action === "reset-password") {
+      if (!userData.email || !userData.newPassword) {
+        return new Response(
+          JSON.stringify({ error: "Email and new password are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Get user by email
+      const { data: users, error: getUserError } = await supabaseClient.auth.admin.listUsers();
+      
+      if (getUserError) {
+        return new Response(
+          JSON.stringify({ error: getUserError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      const targetUser = users.users.find(u => u.email === userData.email);
+      
+      if (!targetUser) {
+        return new Response(
+          JSON.stringify({ error: "User not found with this email" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Update user's password
+      const { error: updatePasswordError } = await supabaseClient.auth.admin.updateUserById(
+        targetUser.id,
+        { password: userData.newPassword }
+      );
+      
+      if (updatePasswordError) {
+        return new Response(
+          JSON.stringify({ error: updatePasswordError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Password for ${userData.email} has been updated` 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
