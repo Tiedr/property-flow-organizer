@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -91,26 +90,12 @@ const EstateDetailPage = () => {
   };
 
   const handleEditEstate = () => {
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can edit estates",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Remove isAdmin check to allow all authenticated users to edit estates
     setIsEditDialogOpen(true);
   };
 
   const handleDeleteEstate = () => {
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can delete estates",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Remove isAdmin check to allow all authenticated users to delete estates
     setIsDeleteDialogOpen(true);
   };
 
@@ -137,27 +122,13 @@ const EstateDetailPage = () => {
   };
 
   const handleAddEntry = () => {
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can add entries",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Remove isAdmin check to allow all authenticated users to add entries
     setSelectedEntry(null);
     setIsAddEntryDialogOpen(true);
   };
 
   const handleEditEntry = (entry: EstateEntry) => {
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can edit entries",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Remove isAdmin check to allow all authenticated users to edit entries
     setSelectedEntry(entry);
     setIsAddEntryDialogOpen(true);
   };
@@ -224,14 +195,7 @@ const EstateDetailPage = () => {
 
   const handleDeleteEntry = async (entryId: string) => {
     if (!estate) return;
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can delete entries",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Remove isAdmin check to allow all authenticated users to delete entries
     
     try {
       const entryToDelete = estate.entries.find(entry => entry.id === entryId);

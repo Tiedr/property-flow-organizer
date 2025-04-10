@@ -77,22 +77,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUserPermissions = async (userId: string) => {
     try {
-      // Get user profile including admin status and role
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_admin, role')
-        .eq('id', userId)
-        .single();
-
+      // Call the database function directly using RPC
+      // This avoids infinite recursion since we're using security definer functions
+      const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
+      
       if (error) {
         throw error;
       }
 
-      // Handle potentially missing fields safely
-      setIsAdmin(!!data?.is_admin);
-      setUserRole((data?.role as UserRole) || null);
+      // Set admin status based on the function result
+      setIsAdmin(!!data);
       
-      console.log("User permissions:", { isAdmin: !!data?.is_admin, role: data?.role });
+      // Get user role (might be null if not set)
+      const { data: roleData, error: roleError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+        
+      if (roleError && roleError.code !== 'PGRST116') {
+        console.error("Error fetching user role:", roleError);
+      } else {
+        setUserRole((roleData?.role as UserRole) || null);
+      }
+      
+      console.log("User permissions:", { isAdmin: !!data, role: roleData?.role || null });
     } catch (error) {
       console.error("Error checking user permissions:", error);
       setIsAdmin(false);
