@@ -77,31 +77,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUserPermissions = async (userId: string) => {
     try {
-      // Call the database function directly using RPC
-      // This avoids infinite recursion since we're using security definer functions
-      const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
-      
-      if (error) {
-        throw error;
-      }
-
-      // Set admin status based on the function result
-      setIsAdmin(!!data);
-      
-      // Get user role (might be null if not set)
-      const { data: roleData, error: roleError } = await supabase
+      // First try to check admin status directly without using the problematic RPC
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('is_admin, role')
         .eq('id', userId)
-        .single();
-        
-      if (roleError && roleError.code !== 'PGRST116') {
-        console.error("Error fetching user role:", roleError);
-      } else {
-        setUserRole((roleData?.role as UserRole) || null);
+        .maybeSingle();
+      
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        setIsAdmin(false);
+        setUserRole(null);
+        return;
       }
       
-      console.log("User permissions:", { isAdmin: !!data, role: roleData?.role || null });
+      // If profile exists, use its values
+      if (profileData) {
+        const isUserAdmin = !!profileData.is_admin || profileData.role === 'admin';
+        setIsAdmin(isUserAdmin);
+        setUserRole((profileData.role as UserRole) || null);
+      } else {
+        setIsAdmin(false);
+        setUserRole(null);
+      }
+      
+      console.log("User permissions:", { 
+        isAdmin: profileData ? (!!profileData.is_admin || profileData.role === 'admin') : false,
+        role: profileData?.role || null 
+      });
     } catch (error) {
       console.error("Error checking user permissions:", error);
       setIsAdmin(false);
