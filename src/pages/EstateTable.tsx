@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -56,26 +55,12 @@ const EstateTable = () => {
   };
   
   const handleAddEstate = () => {
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can add estates",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Removed isAdmin check to allow all authenticated users to add estates
     setIsAddDialogOpen(true);
   };
   
   const handleImport = () => {
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can import estates",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Removed isAdmin check to allow all authenticated users to import estates
     setIsImportDialogOpen(true);
   };
   
