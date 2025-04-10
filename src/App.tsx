@@ -13,25 +13,8 @@ import PromoteAdmin from "./pages/PromoteAdmin";
 import ResetPassword from "./pages/ResetPassword";
 import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard";
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient();
-
-// Add this component to handle the admin account creation redirect
-const AdminAccountSetupRedirect = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  useEffect(() => {
-    // If we're on the auth page, redirect to admin setup
-    if (location.pathname === "/auth") {
-      navigate("/reset-password");
-    }
-  }, [location.pathname, navigate]);
-  
-  return null;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -40,7 +23,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AdminAccountSetupRedirect />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={
