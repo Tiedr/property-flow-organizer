@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -5,16 +6,24 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { Loader2, UserPlus, Trash, ShieldCheck, ShieldOff } from "lucide-react";
+import { Loader2, UserPlus, Trash, ShieldCheck, ShieldOff, Settings } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface UserProfile {
   id: string;
   email: string;
   full_name: string | null;
   is_admin: boolean;
+  role: string | null;
   created_at: string;
 }
 
@@ -22,7 +31,13 @@ const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ email: "", password: "", fullName: "", isAdmin: false });
+  const [newUser, setNewUser] = useState({ 
+    email: "", 
+    password: "", 
+    fullName: "", 
+    isAdmin: false,
+    role: "sales" // Default role
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useAuth();
@@ -51,6 +66,7 @@ const UserManagement = () => {
         email: "Loading...", // This would be filled by admin API
         full_name: profile.full_name,
         is_admin: profile.is_admin || false,
+        role: profile.role || null,
         created_at: profile.created_at
       }));
       
@@ -93,7 +109,7 @@ const UserManagement = () => {
       });
       
       // Reset form and close dialog
-      setNewUser({ email: "", password: "", fullName: "", isAdmin: false });
+      setNewUser({ email: "", password: "", fullName: "", isAdmin: false, role: "sales" });
       setIsAddDialogOpen(false);
       
     } catch (error: any) {
@@ -129,6 +145,33 @@ const UserManagement = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to update admin status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const changeUserRole = async (userId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      ));
+      
+      toast({
+        title: "Success",
+        description: `User role updated to ${newRole}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user role",
         variant: "destructive",
       });
     }
@@ -170,6 +213,7 @@ const UserManagement = () => {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Admin Status</TableHead>
                   <TableHead>Created At</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -179,6 +223,21 @@ const UserManagement = () => {
                   <TableRow key={user.id} className="border-b border-white/5">
                     <TableCell>{user.full_name || "Not set"}</TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={user.role || "sales"}
+                        onValueChange={(value) => changeUserRole(user.id, value)}
+                      >
+                        <SelectTrigger className="w-[130px] glass-input">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card border-estate-primary/20">
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="secretary">Secretary</SelectItem>
+                          <SelectItem value="sales">Sales</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         user.is_admin ? "bg-indigo-500/20 text-indigo-300" : "bg-blue-500/20 text-blue-300"
@@ -194,9 +253,9 @@ const UserManagement = () => {
                           size="sm" 
                           className={`h-8 w-8 p-0 ${user.is_admin ? "text-indigo-400 hover:text-indigo-300" : "text-blue-400 hover:text-blue-300"} hover:bg-white/10`}
                           onClick={() => toggleAdminStatus(user.id, user.is_admin)}
+                          title={user.is_admin ? "Remove Admin Status" : "Grant Admin Status"}
                         >
                           {user.is_admin ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                          <span className="sr-only">{user.is_admin ? "Remove Admin" : "Make Admin"}</span>
                         </Button>
                       </div>
                     </TableCell>
@@ -256,6 +315,22 @@ const UserManagement = () => {
                 onChange={(e) => setNewUser({...newUser, fullName: e.target.value})}
                 placeholder="John Doe"
               />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="role" className="text-sm text-white/70">User Role</label>
+              <Select
+                value={newUser.role}
+                onValueChange={(value) => setNewUser({...newUser, role: value})}
+              >
+                <SelectTrigger className="w-full glass-input">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent className="glass-card border-estate-primary/20">
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="secretary">Secretary</SelectItem>
+                  <SelectItem value="sales">Sales</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center space-x-2">
               <input
