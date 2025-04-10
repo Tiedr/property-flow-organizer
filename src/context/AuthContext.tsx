@@ -89,8 +89,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Update state with user permissions
+      // Handle potentially missing fields safely
       setIsAdmin(!!data?.is_admin);
-      setUserRole(data?.role || null);
+      setUserRole((data?.role as UserRole) || null);
       
       console.log("User permissions:", { isAdmin: !!data?.is_admin, role: data?.role });
     } catch (error) {

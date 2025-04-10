@@ -18,12 +18,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type UserRole = "admin" | "secretary" | "sales";
+
 interface UserProfile {
   id: string;
   email: string;
   full_name: string | null;
   is_admin: boolean;
-  role: string | null;
+  role: UserRole | null;
   created_at: string;
 }
 
@@ -36,7 +38,7 @@ const UserManagement = () => {
     password: "", 
     fullName: "", 
     isAdmin: false,
-    role: "sales" // Default role
+    role: "sales" as UserRole
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -66,7 +68,7 @@ const UserManagement = () => {
         email: "Loading...", // This would be filled by admin API
         full_name: profile.full_name,
         is_admin: profile.is_admin || false,
-        role: profile.role || null,
+        role: (profile.role as UserRole) || null,
         created_at: profile.created_at
       }));
       
@@ -150,7 +152,7 @@ const UserManagement = () => {
     }
   };
 
-  const changeUserRole = async (userId: string, newRole: string) => {
+  const changeUserRole = async (userId: string, newRole: UserRole) => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -226,7 +228,7 @@ const UserManagement = () => {
                     <TableCell>
                       <Select
                         value={user.role || "sales"}
-                        onValueChange={(value) => changeUserRole(user.id, value)}
+                        onValueChange={(value) => changeUserRole(user.id, value as UserRole)}
                       >
                         <SelectTrigger className="w-[130px] glass-input">
                           <SelectValue placeholder="Select role" />
@@ -320,7 +322,7 @@ const UserManagement = () => {
               <label htmlFor="role" className="text-sm text-white/70">User Role</label>
               <Select
                 value={newUser.role}
-                onValueChange={(value) => setNewUser({...newUser, role: value})}
+                onValueChange={(value) => setNewUser({...newUser, role: value as UserRole})}
               >
                 <SelectTrigger className="w-full glass-input">
                   <SelectValue placeholder="Select role" />

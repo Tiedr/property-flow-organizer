@@ -7,6 +7,8 @@ import { Loader2, ShieldCheck, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
+type UserRole = "admin" | "secretary" | "sales";
+
 const PromoteAdmin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
