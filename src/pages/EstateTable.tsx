@@ -22,9 +22,10 @@ const EstateTable = () => {
     description: ''
   });
   const [loading, setLoading] = useState(true);
+  const [creatingEstate, setCreatingEstate] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   
   useEffect(() => {
     const fetchEstates = async () => {
@@ -44,8 +45,10 @@ const EstateTable = () => {
       }
     };
     
-    fetchEstates();
-  }, [toast]);
+    if (user) {
+      fetchEstates();
+    }
+  }, [toast, user]);
   
   const handleExport = () => {
     toast({
@@ -55,12 +58,10 @@ const EstateTable = () => {
   };
   
   const handleAddEstate = () => {
-    // Removed isAdmin check to allow all authenticated users to add estates
     setIsAddDialogOpen(true);
   };
   
   const handleImport = () => {
-    // Removed isAdmin check to allow all authenticated users to import estates
     setIsImportDialogOpen(true);
   };
   
@@ -85,6 +86,8 @@ const EstateTable = () => {
       });
       return;
     }
+    
+    setCreatingEstate(true);
     
     try {
       const newEstateObj = await createEstate({
@@ -111,6 +114,8 @@ const EstateTable = () => {
         description: "Failed to create estate: " + (error.message || "Unknown error"),
         variant: "destructive"
       });
+    } finally {
+      setCreatingEstate(false);
     }
   };
 
@@ -237,8 +242,9 @@ const EstateTable = () => {
             <Button 
               onClick={handleCreateEstate} 
               className="apple-button"
+              disabled={creatingEstate}
             >
-              Create Estate
+              {creatingEstate ? "Creating..." : "Create Estate"}
             </Button>
           </DialogFooter>
         </DialogContent>

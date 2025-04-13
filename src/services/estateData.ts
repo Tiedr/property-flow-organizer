@@ -153,18 +153,27 @@ export const updateEstate = async (updatedEstate: Estate): Promise<Estate> => {
 // Create a new estate
 export const createEstate = async (estate: Omit<Estate, "id" | "entries">): Promise<Estate> => {
   try {
+    // Get current user session first to ensure we're authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error("User not authenticated");
+    }
+    
+    // Create estate with current timestamp
+    const timestamp = new Date().toISOString();
     const { data, error } = await supabase
       .from('estates')
       .insert({
         name: estate.name,
         description: estate.description,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_at: timestamp,
+        updated_at: timestamp
       })
       .select()
       .single();
     
     if (error) {
+      console.error("Error creating estate:", error);
       throw error;
     }
     
