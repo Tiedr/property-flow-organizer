@@ -87,6 +87,15 @@ const EstateTable = () => {
       return;
     }
     
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create estates",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setCreatingEstate(true);
     
     try {
@@ -145,6 +154,10 @@ const EstateTable = () => {
       {loading ? (
         <div className="text-center py-10">
           <p className="text-muted-foreground">Loading estate tables...</p>
+        </div>
+      ) : !user ? (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">Please log in to view and manage estates.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10 rounded-none">

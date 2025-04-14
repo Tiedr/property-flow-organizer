@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Estate, EstateEntry } from "@/types";
 import { v4 as uuidv4 } from "uuid";
@@ -161,6 +160,16 @@ export const createEstate = async (estate: Omit<Estate, "id" | "entries">): Prom
     
     // Create estate with current timestamp
     const timestamp = new Date().toISOString();
+    
+    // Log data for debugging
+    console.log("Creating estate with data:", {
+      name: estate.name,
+      description: estate.description,
+      created_at: timestamp,
+      updated_at: timestamp
+    });
+    
+    // Insert with more detailed error handling
     const { data, error } = await supabase
       .from('estates')
       .insert({
@@ -174,6 +183,9 @@ export const createEstate = async (estate: Omit<Estate, "id" | "entries">): Prom
     
     if (error) {
       console.error("Error creating estate:", error);
+      if (error.message && error.message.includes("infinite recursion")) {
+        throw new Error("Database policy error: Please contact support to fix the infinite recursion issue.");
+      }
       throw error;
     }
     
