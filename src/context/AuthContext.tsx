@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         // Check admin status and role when auth state changes
+        // Use setTimeout to prevent recursion issues
         if (session?.user) {
           setTimeout(() => {
             checkUserPermissions(session.user.id);
@@ -79,7 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUserPermissions = async (userId: string) => {
     try {
-      // First try to check admin status directly from the profile
+      // Direct database query to fetch user permissions
+      // This avoids RLS recursion because we're not calling RPC functions
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('is_admin, role')
