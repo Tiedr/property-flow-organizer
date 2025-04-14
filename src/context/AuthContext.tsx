@@ -43,7 +43,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Check admin status and role when auth state changes
         if (session?.user) {
-          checkUserPermissions(session.user.id);
+          setTimeout(() => {
+            checkUserPermissions(session.user.id);
+          }, 0);
         } else {
           setIsAdmin(false);
           setUserRole(null);
@@ -59,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          checkUserPermissions(session.user.id);
+          await checkUserPermissions(session.user.id);
         }
       } catch (error) {
         console.error("Error getting session:", error);
@@ -77,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUserPermissions = async (userId: string) => {
     try {
-      // First try to check admin status directly without using the problematic RPC
+      // First try to check admin status directly from the profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('is_admin, role')
@@ -93,18 +95,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // If profile exists, use its values
       if (profileData) {
-        const isUserAdmin = !!profileData.is_admin || profileData.role === 'admin';
-        setIsAdmin(isUserAdmin);
+        setIsAdmin(!!profileData.is_admin);
         setUserRole((profileData.role as UserRole) || null);
+        
+        console.log("User permissions from profile:", { 
+          isAdmin: !!profileData.is_admin,
+          role: profileData.role || null 
+        });
       } else {
         setIsAdmin(false);
         setUserRole(null);
       }
-      
-      console.log("User permissions:", { 
-        isAdmin: profileData ? (!!profileData.is_admin || profileData.role === 'admin') : false,
-        role: profileData?.role || null 
-      });
     } catch (error) {
       console.error("Error checking user permissions:", error);
       setIsAdmin(false);
