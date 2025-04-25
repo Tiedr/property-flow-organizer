@@ -11,13 +11,16 @@ const Logo = ({
   const navigate = useNavigate();
   const sizeClasses = {
     sm: "h-6",
-    md: "h-9",
+    md: "h-9", 
     lg: "h-11"
   };
 
   return (
-    <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
-      <div className="flex items-center">
+    <div 
+      className="flex items-center justify-center cursor-pointer" 
+      onClick={() => navigate("/")}
+    >
+      <div className="flex items-center justify-center w-full">
         <img 
           alt="UGHORON" 
           className={`object-contain ${sizeClasses[size]}`} 
