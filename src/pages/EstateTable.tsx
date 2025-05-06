@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Estate } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { getAllEstates, createEstate } from "@/services/estateData";
-import { Download, FileUp, Plus, Table as TableIcon, Calendar, Users, Sparkles } from "lucide-react";
+import { Download, FileUp, Plus, Table as TableIcon, Calendar, Users, Sparkles, Search, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ const EstateTable = () => {
   });
   const [loading, setLoading] = useState(true);
   const [creatingEstate, setCreatingEstate] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAdmin, user } = useAuth();
@@ -128,6 +129,12 @@ const EstateTable = () => {
     }
   };
 
+  // Filter estates based on search query
+  const filteredEstates = estates.filter(estate =>
+    estate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (estate.description || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <Layout>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
@@ -151,6 +158,22 @@ const EstateTable = () => {
         </div>
       </div>
 
+      <div className="flex items-center mb-4 gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            type="text"
+            placeholder="Search estates..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 glass-input"
+          />
+        </div>
+        <Button variant="outline" onClick={() => setSearchQuery("")} size="icon" className="glass-input">
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      </div>
+
       {loading ? (
         <div className="text-center py-10">
           <p className="text-muted-foreground">Loading estate tables...</p>
@@ -161,12 +184,12 @@ const EstateTable = () => {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-10 rounded-none">
-          {estates.length > 0 ? (
-            estates.map(estate => (
+          {filteredEstates.length > 0 ? (
+            filteredEstates.map(estate => (
               <Card 
                 key={estate.id} 
                 onClick={() => handleEstateClick(estate)} 
-                className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border border-white shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+                className="glass-card-ultra-light card-hover hover:border-estate-primary/50 transition-all duration-300 overflow-hidden py-[10px] border border-white shadow-[0_0_8px_rgba(255,255,255,0.6)] cursor-pointer"
               >
                 <CardHeader>
                   <CardTitle className="flex items-center text-white">
@@ -205,7 +228,9 @@ const EstateTable = () => {
             ))
           ) : (
             <div className="text-center py-10 col-span-full glass p-8 rounded-lg border border-white">
-              <p className="text-muted-foreground">No estate tables found. Add an estate to get started.</p>
+              <p className="text-muted-foreground">
+                {searchQuery ? "No estates matching your search were found." : "No estate tables found. Add an estate to get started."}
+              </p>
             </div>
           )}
         </div>

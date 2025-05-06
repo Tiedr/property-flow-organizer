@@ -1,522 +1,195 @@
-import { supabase } from "@/integrations/supabase/client";
-import { Estate, EstateEntry } from "@/types";
 import { v4 as uuidv4 } from "uuid";
-import { faker } from '@faker-js/faker';
+import { Estate, EstateEntry } from "@/types";
 
-// Function to fetch all estates
+const mockEstates: Estate[] = [
+  {
+    id: "1",
+    name: "Westlands Estate",
+    description: "A prime estate in the heart of Westlands.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    entries: [
+      {
+        id: uuidv4(),
+        clientName: "John Doe",
+        uniqueId: "JD123",
+        representative: "Jane Smith",
+        plotNumbers: ["W1", "W2"],
+        amount: 500000,
+        amountPaid: 250000,
+        documentsReceived: ["ID", "Title Deed"],
+        phoneNumber: "+254712345678",
+        email: "john.doe@example.com",
+        address: "Westlands, Nairobi",
+        paymentStatus: "Partial",
+        nextDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
+      },
+    ],
+  },
+  {
+    id: "2",
+    name: "Kilimani Heights",
+    description: "Luxury apartments in Kilimani.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    entries: [
+      {
+        id: uuidv4(),
+        clientName: "Alice Maina",
+        uniqueId: "AM456",
+        representative: "Bob Kamau",
+        plotNumbers: ["K10", "K11"],
+        amount: 750000,
+        amountPaid: 750000,
+        documentsReceived: ["ID", "KRA Pin"],
+        phoneNumber: "+254722333444",
+        email: "alice.maina@example.com",
+        address: "Kilimani, Nairobi",
+        paymentStatus: "Paid",
+        nextDueDate: new Date(new Date().setDate(new Date().getDate() + 60)).toISOString(),
+      },
+    ],
+  },
+];
+
 export const getAllEstates = async (): Promise<Estate[]> => {
-  try {
-    const { data: estates, error } = await supabase
-      .from('estates')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      throw error;
-    }
-
-    // Fetch entries for each estate
-    const estatesWithEntries = await Promise.all(
-      (estates || []).map(async (estate) => {
-        const { data: entries, error: entriesError } = await supabase
-          .from('estate_entries')
-          .select(`
-            *,
-            clients:client_id (id, unique_id, name, email, phone)
-          `)
-          .eq('estate_id', estate.id);
-        
-        if (entriesError) {
-          console.error("Error fetching entries:", entriesError);
-          return {
-            ...estate,
-            entries: [],
-            createdAt: estate.created_at,
-            updatedAt: estate.updated_at
-          };
-        }
-        
-        // Map the database fields to our application model
-        const mappedEntries = entries ? entries.map(entry => ({
-          id: entry.id,
-          clientName: entry.client_name,
-          uniqueId: entry.unique_id || "",
-          representative: entry.representative || "",
-          plotNumbers: entry.plot_numbers || [],
-          amount: entry.amount,
-          amountPaid: entry.amount_paid,
-          documentsReceived: entry.documents_received || [],
-          phoneNumber: entry.phone_number || "",
-          email: entry.email || "",
-          address: entry.address || "",
-          paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-          nextDueDate: entry.next_due_date || "",
-          clientId: entry.client_id || undefined,
-          clientDetails: entry.clients ? {
-            id: entry.clients.id,
-            name: entry.clients.name,
-            uniqueId: entry.clients.unique_id,
-            email: entry.clients.email,
-            phone: entry.clients.phone
-          } : undefined
-        })) : [];
-        
-        return {
-          id: estate.id,
-          name: estate.name,
-          description: estate.description || "",
-          createdAt: estate.created_at,
-          updatedAt: estate.updated_at,
-          entries: mappedEntries
-        };
-      })
-    );
-    
-    return estatesWithEntries;
-  } catch (error) {
-    console.error("Error fetching estates:", error);
-    throw error;
-  }
-};
-
-// Function to get a specific estate by ID
-export const getEstateById = async (id: string): Promise<Estate | undefined> => {
-  try {
-    const { data: estate, error } = await supabase
-      .from('estates')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      throw error;
-    }
-    
-    const { data: entries, error: entriesError } = await supabase
-      .from('estate_entries')
-      .select(`
-        *,
-        clients:client_id (id, unique_id, name, email, phone)
-      `)
-      .eq('estate_id', id);
-    
-    if (entriesError) {
-      throw entriesError;
-    }
-    
-    // Map the entries
-    const mappedEntries = entries ? entries.map(entry => ({
-      id: entry.id,
-      clientName: entry.client_name,
-      uniqueId: entry.unique_id || "",
-      representative: entry.representative || "",
-      plotNumbers: entry.plot_numbers || [],
-      amount: entry.amount,
-      amountPaid: entry.amount_paid,
-      documentsReceived: entry.documents_received || [],
-      phoneNumber: entry.phone_number || "",
-      email: entry.email || "",
-      address: entry.address || "",
-      paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-      nextDueDate: entry.next_due_date || "",
-      clientId: entry.client_id || undefined,
-      clientDetails: entry.clients ? {
-        id: entry.clients.id,
-        name: entry.clients.name,
-        uniqueId: entry.clients.unique_id,
-        email: entry.clients.email,
-        phone: entry.clients.phone
-      } : undefined
-    })) : [];
-    
-    return {
-      id: estate.id,
-      name: estate.name,
-      description: estate.description || "",
-      createdAt: estate.created_at,
-      updatedAt: estate.updated_at,
-      entries: mappedEntries
-    };
-    
-  } catch (error) {
-    console.error("Error fetching estate:", error);
-    throw error;
-  }
-};
-
-// Update an estate in our store
-export const updateEstate = async (updatedEstate: Estate): Promise<Estate> => {
-  try {
-    // First, update the estate record
-    const { error: estateError } = await supabase
-      .from('estates')
-      .update({
-        name: updatedEstate.name,
-        description: updatedEstate.description,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', updatedEstate.id);
-    
-    if (estateError) {
-      throw estateError;
-    }
-    
-    // Handle entries updates separately if needed
-    // This would be better done through more specific functions
-    
-    return updatedEstate;
-  } catch (error) {
-    console.error("Error updating estate:", error);
-    throw error;
-  }
-};
-
-// Create a new estate
-export const createEstate = async (estate: Omit<Estate, "id" | "entries">): Promise<Estate> => {
-  try {
-    // Get current user session first to ensure we're authenticated
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      throw new Error("User not authenticated");
-    }
-    
-    // Create estate with current timestamp
-    const timestamp = new Date().toISOString();
-    
-    // Log data for debugging
-    console.log("Creating estate with data:", {
-      name: estate.name,
-      description: estate.description,
-      created_at: timestamp,
-      updated_at: timestamp
-    });
-    
-    // Insert with more detailed error handling
-    const { data, error } = await supabase
-      .from('estates')
-      .insert({
-        name: estate.name,
-        description: estate.description,
-        created_at: timestamp,
-        updated_at: timestamp
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Error creating estate:", error);
-      if (error.message && error.message.includes("infinite recursion")) {
-        throw new Error("Database policy error: Please contact support to fix the infinite recursion issue.");
-      }
-      throw error;
-    }
-    
-    if (!data) {
-      throw new Error("No data returned from insert operation");
-    }
-    
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description || "",
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      entries: []
-    };
-  } catch (error) {
-    console.error("Error creating estate:", error);
-    throw error;
-  }
-};
-
-// Delete an estate
-export const deleteEstate = async (id: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('estates')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      throw error;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error deleting estate:", error);
-    throw error;
-  }
-};
-
-// Create a new estate entry with optional client linking
-export const createEstateEntry = async (
-  estateId: string, 
-  entry: Omit<EstateEntry, "id">
-): Promise<EstateEntry> => {
-  try {
-    // First, check if there's an existing client with the uniqueId
-    let clientId = entry.clientId;
-    
-    if (!clientId && entry.uniqueId) {
-      const { data: existingClients } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('unique_id', entry.uniqueId)
-        .limit(1);
-      
-      if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id;
-      } else if (entry.clientName) {
-        // Create a new client if none exists
-        const { data: newClient, error: clientError } = await supabase
-          .from('clients')
-          .insert({
-            unique_id: entry.uniqueId,
-            name: entry.clientName,
-            email: entry.email,
-            phone: entry.phoneNumber,
-            type: 'Individual',
-            status: 'Active'
-          })
-          .select()
-          .single();
-          
-        if (clientError) {
-          console.error("Error creating client:", clientError);
-        } else if (newClient) {
-          clientId = newClient.id;
-        }
-      }
-    }
-    
-    // Now create the estate entry
-    const { data, error } = await supabase
-      .from('estate_entries')
-      .insert({
-        estate_id: estateId,
-        client_id: clientId,
-        client_name: entry.clientName,
-        unique_id: entry.uniqueId,
-        representative: entry.representative,
-        plot_numbers: entry.plotNumbers,
-        amount: entry.amount,
-        amount_paid: entry.amountPaid,
-        documents_received: entry.documentsReceived,
-        phone_number: entry.phoneNumber,
-        email: entry.email,
-        address: entry.address,
-        payment_status: entry.paymentStatus,
-        next_due_date: entry.nextDueDate,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select(`
-        *,
-        clients:client_id (id, unique_id, name, email, phone)
-      `)
-      .single();
-    
-    if (error) {
-      throw error;
-    }
-    
-    if (!data) {
-      throw new Error("No data returned from insert operation");
-    }
-    
-    // Map the database fields to our application model
-    return {
-      id: data.id,
-      clientName: data.client_name,
-      uniqueId: data.unique_id || "",
-      representative: data.representative || "",
-      plotNumbers: data.plot_numbers || [],
-      amount: data.amount,
-      amountPaid: data.amount_paid,
-      documentsReceived: data.documents_received || [],
-      phoneNumber: data.phone_number || "",
-      email: data.email || "",
-      address: data.address || "",
-      paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-      nextDueDate: data.next_due_date || "",
-      clientId: data.client_id,
-      clientDetails: data.clients ? {
-        id: data.clients.id,
-        name: data.clients.name,
-        uniqueId: data.clients.unique_id,
-        email: data.clients.email,
-        phone: data.clients.phone
-      } : undefined
-    };
-  } catch (error) {
-    console.error("Error creating estate entry:", error);
-    throw error;
-  }
-};
-
-// Update an estate entry with client linking
-export const updateEstateEntry = async (
-  entryId: string, 
-  entry: Omit<EstateEntry, "id">
-): Promise<EstateEntry> => {
-  try {
-    // Check if there's an existing client with the uniqueId
-    let clientId = entry.clientId;
-    
-    if (!clientId && entry.uniqueId) {
-      const { data: existingClients } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('unique_id', entry.uniqueId)
-        .limit(1);
-      
-      if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id;
-      } else if (entry.clientName) {
-        // Create a new client if none exists
-        const { data: newClient, error: clientError } = await supabase
-          .from('clients')
-          .insert({
-            unique_id: entry.uniqueId,
-            name: entry.clientName,
-            email: entry.email,
-            phone: entry.phoneNumber,
-            type: 'Individual',
-            status: 'Active'
-          })
-          .select()
-          .single();
-          
-        if (clientError) {
-          console.error("Error creating client:", clientError);
-        } else if (newClient) {
-          clientId = newClient.id;
-        }
-      }
-    }
-    
-    const { data, error } = await supabase
-      .from('estate_entries')
-      .update({
-        client_id: clientId,
-        client_name: entry.clientName,
-        unique_id: entry.uniqueId,
-        representative: entry.representative,
-        plot_numbers: entry.plotNumbers,
-        amount: entry.amount,
-        amount_paid: entry.amountPaid,
-        documents_received: entry.documentsReceived,
-        phone_number: entry.phoneNumber,
-        email: entry.email,
-        address: entry.address,
-        payment_status: entry.paymentStatus,
-        next_due_date: entry.nextDueDate,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', entryId)
-      .select(`
-        *,
-        clients:client_id (id, unique_id, name, email, phone)
-      `)
-      .single();
-    
-    if (error) {
-      throw error;
-    }
-    
-    if (!data) {
-      throw new Error("No data returned from update operation");
-    }
-    
-    // Map the database fields to our application model
-    return {
-      id: data.id,
-      clientName: data.client_name,
-      uniqueId: data.unique_id || "",
-      representative: data.representative || "",
-      plotNumbers: data.plot_numbers || [],
-      amount: data.amount,
-      amountPaid: data.amount_paid,
-      documentsReceived: data.documents_received || [],
-      phoneNumber: data.phone_number || "",
-      email: data.email || "",
-      address: data.address || "",
-      paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-      nextDueDate: data.next_due_date || "",
-      clientId: data.client_id,
-      clientDetails: data.clients ? {
-        id: data.clients.id,
-        name: data.clients.name,
-        uniqueId: data.clients.unique_id,
-        email: data.clients.email,
-        phone: data.clients.phone
-      } : undefined
-    };
-  } catch (error) {
-    console.error("Error updating estate entry:", error);
-    throw error;
-  }
-};
-
-// Delete an estate entry
-export const deleteEstateEntry = async (entryId: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('estate_entries')
-      .delete()
-      .eq('id', entryId);
-    
-    if (error) {
-      throw error;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error deleting estate entry:", error);
-    throw error;
-  }
-};
-
-// Generate placeholder data for testing
-export const generateEstateData = (count: number): Estate[] => {
-  return Array.from({ length: count }, (_, i) => {
-    const entryCount = faker.number.int({ min: 2, max: 8 });
-    
-    return {
-      id: uuidv4(),
-      name: `Estate ${faker.company.name()}`,
-      description: faker.company.catchPhrase(),
-      createdAt: faker.date.past().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
-      entries: Array.from({ length: entryCount }, () => generateEstateEntry())
-    };
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(mockEstates);
+    }, 200);
   });
 };
 
-// Generate a random entry for testing
-const generateEstateEntry = (): EstateEntry => {
-  const amount = faker.number.int({ min: 100000, max: 10000000 });
-  const amountPaid = faker.number.int({ min: 0, max: amount });
-  const paymentStatus: ("Paid" | "Partial" | "Pending" | "Overdue") = 
-    amountPaid === amount ? "Paid" : 
-    amountPaid > 0 ? "Partial" : 
-    faker.helpers.arrayElement(["Pending", "Overdue"]);
-  
-  return {
-    id: uuidv4(),
-    clientName: faker.person.fullName(),
-    uniqueId: faker.string.alphanumeric(8).toUpperCase(),
-    representative: faker.person.fullName(),
-    plotNumbers: Array.from({ length: faker.number.int({ min: 1, max: 5 }) }, 
-      () => faker.string.alphanumeric(4).toUpperCase()),
-    amount: amount,
-    amountPaid: amountPaid,
-    documentsReceived: Array.from({ length: faker.number.int({ min: 0, max: 3 }) }, 
-      () => faker.helpers.arrayElement(["ID Proof", "Address Proof", "Pan Card", "Aadhar Card"])),
-    phoneNumber: faker.phone.number(),
-    email: faker.internet.email(),
-    address: faker.location.streetAddress() + ", " + faker.location.city(),
-    paymentStatus: paymentStatus,
-    nextDueDate: faker.date.future().toISOString().split('T')[0]
-  };
+export const getEstateById = async (id: string): Promise<Estate | undefined> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const estate = mockEstates.find((estate) => estate.id === id);
+      resolve(estate);
+    }, 200);
+  });
+};
+
+export const createEstate = async (estateData: Omit<Estate, "id" | "createdAt" | "updatedAt" | "entries">): Promise<Estate> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newEstate: Estate = {
+        id: uuidv4(),
+        ...estateData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        entries: [],
+      };
+      mockEstates.push(newEstate);
+      resolve(newEstate);
+    }, 200);
+  });
+};
+
+export const updateEstate = async (id: string, updates: Partial<Estate>): Promise<Estate | undefined> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const index = mockEstates.findIndex((estate) => estate.id === id);
+      if (index !== -1) {
+        mockEstates[index] = {
+          ...mockEstates[index],
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        };
+        resolve(mockEstates[index]);
+      } else {
+        resolve(undefined);
+      }
+    }, 200);
+  });
+};
+
+export const deleteEstate = async (id: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const index = mockEstates.findIndex((estate) => estate.id === id);
+      if (index !== -1) {
+        mockEstates.splice(index, 1);
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }, 200);
+  });
+};
+
+export const createEntry = async (estateId: string, entryData: Omit<EstateEntry, "id">): Promise<EstateEntry | undefined> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const estate = mockEstates.find((estate) => estate.id === estateId);
+      if (estate) {
+        const { clientId, clientName, email, phoneNumber, ...rest } = entryData;
+
+        const newEntry: EstateEntry = {
+          id: uuidv4(),
+          ...rest,
+          clientDetails: {
+            id: clientId || "",
+            name: clientName,
+            email: email || "",
+            phone: phoneNumber || "",
+          },
+        };
+        estate.entries.push(newEntry);
+        resolve(newEntry);
+      } else {
+        resolve(undefined);
+      }
+    }, 200);
+  });
+};
+
+export const updateEntry = async (estateId: string, entryId: string, updates: Partial<Omit<EstateEntry, "id">>): Promise<EstateEntry | undefined> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const estate = mockEstates.find((estate) => estate.id === estateId);
+      if (estate) {
+        const entryIndex = estate.entries.findIndex((entry) => entry.id === entryId);
+        if (entryIndex !== -1) {
+          const existingEntry = estate.entries[entryIndex];
+          const { clientId, clientName, email, phoneNumber, ...rest } = updates;
+
+          const updatedEntry: EstateEntry = {
+            ...existingEntry,
+            ...rest,
+            clientDetails: {
+              id: clientId || existingEntry.clientId || "",
+              name: clientName,
+              email: email || existingEntry.email,
+              phone: phoneNumber || existingEntry.phoneNumber,
+            },
+          };
+          estate.entries[entryIndex] = updatedEntry;
+          resolve(updatedEntry);
+        } else {
+          resolve(undefined);
+        }
+      } else {
+        resolve(undefined);
+      }
+    }, 200);
+  });
+};
+
+export const deleteEntry = async (estateId: string, entryId: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const estate = mockEstates.find((estate) => estate.id === estateId);
+      if (estate) {
+        const entryIndex = estate.entries.findIndex((entry) => entry.id === entryId);
+        if (entryIndex !== -1) {
+          estate.entries.splice(entryIndex, 1);
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      } else {
+        resolve(false);
+      }
+    }, 200);
+  });
 };

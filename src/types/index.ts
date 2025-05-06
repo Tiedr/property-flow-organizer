@@ -14,6 +14,7 @@ export interface EstateEntry {
   paymentStatus: "Paid" | "Partial" | "Pending" | "Overdue";
   nextDueDate: string;
   clientId?: string;
+  estateName?: string; // Add this property to fix the TypeScript error
 }
 
 export interface Estate {
@@ -78,4 +79,12 @@ export interface InvoiceItem {
   amount: number;
   createdAt: string;
   plotDetails?: string;
+}
+
+// Add this to allow for client details in the estate entry
+export interface ClientDetails {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
 }

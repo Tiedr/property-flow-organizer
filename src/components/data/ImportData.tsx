@@ -1,111 +1,130 @@
 
-import { ChangeEvent, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Upload } from "lucide-react";
+import * as XLSX from "xlsx";
+import { FileUp } from "lucide-react";
 
-interface ImportDataProps {
+export interface ImportDataProps {
+  type: "clients" | "estates" | "invoices";
   onImport: (data: any[]) => void;
-  type: "clients" | "projects";
+  onCancel?: () => void; // Make this optional since it might not be used everywhere
 }
 
-const ImportData = ({ onImport, type }: ImportDataProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+const ImportData = ({ type, onImport, onCancel }: ImportDataProps) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importedData, setImportedData] = useState<any[]>([]);
   const { toast } = useToast();
 
-  const processCSV = (csv: string) => {
-    const lines = csv.split("\n");
-    const headers = lines[0].split(",").map((h) => h.trim());
-    
-    const data = lines.slice(1).filter(line => line.trim() !== "").map((line) => {
-      const values = line.split(",").map((v) => v.trim());
-      return headers.reduce((obj, header, i) => {
-        obj[header] = values[i];
-        return obj;
-      }, {} as Record<string, string>);
-    });
-    
-    return data;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      processFile(e.target.files[0]);
+    }
   };
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsLoading(true);
-    
-    // Check if file is CSV or Excel
-    if (!file.name.endsWith(".csv") && !file.name.endsWith(".xlsx")) {
+  const processFile = async (file: File) => {
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      setImportedData(jsonData);
+      
       toast({
-        title: "Invalid file format",
-        description: "Please upload a CSV or Excel file.",
-        variant: "destructive"
+        title: "Data Parsed",
+        description: `${jsonData.length} records found in file. Review and click Import to continue.`,
       });
-      setIsLoading(false);
+    } catch (error) {
+      toast({
+        title: "Error Processing File",
+        description: "Could not read the spreadsheet file. Please check the format and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleImport = async () => {
+    if (!importedData.length) {
+      toast({
+        title: "No Data",
+        description: "No data to import. Please select a valid spreadsheet file.",
+        variant: "destructive",
+      });
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        // In a real app, we'd use a library like xlsx for Excel files
-        // For now, we'll just handle CSV as proof of concept
-        if (file.name.endsWith(".csv") && event.target?.result) {
-          const csv = event.target.result as string;
-          const data = processCSV(csv);
-          onImport(data);
-          toast({
-            title: "Import successful",
-            description: `${data.length} ${type} imported successfully.`
-          });
-        } else {
-          toast({
-            title: "Excel import",
-            description: "Excel import functionality will be available in the next version.",
-            variant: "default"
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Import failed",
-          description: "There was an error processing your file.",
-          variant: "destructive"
-        });
-      }
-      setIsLoading(false);
-    };
-
-    reader.onerror = () => {
+    
+    setImporting(true);
+    
+    try {
+      await onImport(importedData);
       toast({
-        title: "Import failed",
-        description: "There was an error reading your file.",
-        variant: "destructive"
+        title: "Import Successful",
+        description: `${importedData.length} ${type} were imported successfully.`,
       });
-      setIsLoading(false);
-    };
-
-    reader.readAsText(file);
+    } catch (error: any) {
+      toast({
+        title: "Import Failed",
+        description: `Error importing ${type}: ${error.message || "Unknown error"}`,
+        variant: "destructive",
+      });
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
-    <div>
-      <label htmlFor="file-upload" className="cursor-pointer">
-        <Button 
-          variant="outline" 
-          disabled={isLoading}
-          className="flex items-center gap-2"
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="grid w-full max-w-sm items-center gap-1.5">
+          <label htmlFor="file" className="text-sm font-medium mb-2">
+            Select Excel or CSV File
+          </label>
+          <Input
+            id="file"
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileChange}
+            className="glass-input"
+          />
+        </div>
+      </div>
+      
+      <div className="text-sm my-4">
+        {file && (
+          <p>
+            Selected file: <span className="font-medium">{file.name}</span>
+          </p>
+        )}
+        {importedData.length > 0 && (
+          <p className="mt-2">
+            Records found: <span className="font-medium">{importedData.length}</span>
+          </p>
+        )}
+      </div>
+      
+      <div className="flex justify-end gap-3">
+        {onCancel && (
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="apple-button-secondary"
+          >
+            Cancel
+          </Button>
+        )}
+        <Button
+          onClick={handleImport}
+          disabled={importing || !importedData.length}
+          className="apple-button"
         >
-          <Upload className="h-4 w-4" />
-          Import {type === "clients" ? "Clients" : "Projects"}
+          <FileUp className="mr-2 h-4 w-4" />
+          {importing ? `Importing ${type}...` : `Import ${type}`}
         </Button>
-        <input 
-          id="file-upload" 
-          type="file" 
-          accept=".csv,.xlsx" 
-          onChange={handleFileUpload} 
-          className="hidden" 
-        />
-      </label>
+      </div>
     </div>
   );
 };

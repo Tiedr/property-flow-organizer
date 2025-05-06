@@ -13,18 +13,26 @@ const getRandomDate = (start: Date, end: Date) => {
 export const generateMockClients = (count: number = 15): Client[] => {
   const types: ["Individual", "Company"] = ["Individual", "Company"];
   const statuses: ["Active", "Inactive", "Lead"] = ["Active", "Inactive", "Lead"];
+  const now = new Date();
   
-  return Array.from({ length: count }).map((_, i) => ({
-    id: uuidv4(),
-    name: `Client ${i + 1}`,
-    email: `client${i + 1}@example.com`,
-    phone: `+1 555-${Math.floor(1000 + Math.random() * 9000)}`,
-    company: types[Math.floor(Math.random() * types.length)] === "Company" ? `Company ${i + 1}` : undefined,
-    type: types[Math.floor(Math.random() * types.length)],
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    projects: Math.floor(Math.random() * 5),
-    createdAt: getRandomDate(new Date(2023, 0, 1), new Date())
-  }));
+  return Array.from({ length: count }).map((_, i) => {
+    const createdAt = getRandomDate(new Date(2023, 0, 1), now);
+    return {
+      id: uuidv4(),
+      uniqueId: `C${Math.floor(10000 + Math.random() * 90000)}`,
+      name: `Client ${i + 1}`,
+      email: `client${i + 1}@example.com`,
+      phone: `+1 555-${Math.floor(1000 + Math.random() * 9000)}`,
+      company: types[Math.floor(Math.random() * types.length)] === "Company" ? `Company ${i + 1}` : undefined,
+      type: types[Math.floor(Math.random() * types.length)],
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      createdAt,
+      updatedAt: createdAt,
+      properties: Math.floor(Math.random() * 5),
+      totalAmount: Math.floor(10000 + Math.random() * 90000),
+      totalPaid: Math.floor(1000 + Math.random() * 50000)
+    };
+  });
 };
 
 // Generate mock projects
