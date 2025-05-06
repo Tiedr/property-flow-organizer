@@ -1,199 +1,472 @@
 
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { Client, Project } from "@/types";
-import { generateMockClients, generateMockProjects } from "@/services/mockData";
-import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import DataTable from "@/components/data/DataTable";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import ClientForm from "@/components/forms/ClientForm";
 import { useToast } from "@/components/ui/use-toast";
+import { Client, EstateEntry, Invoice } from "@/types";
+import { getClientById, getClientProperties, getClientInvoices, deleteClient, updateClient } from "@/services/clientData";
+import { ArrowLeft, Edit, Trash, FilePlus, Building, FileText, Home } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import ClientForm from "@/components/forms/ClientForm";
 
 const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [client, setClient] = useState<Client | null>(null);
-  const [clientProjects, setClientProjects] = useState<Project[]>([]);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [client, setClient] = useState<Client | null>(null);
+  const [properties, setProperties] = useState<EstateEntry[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, we would fetch this from an API
-    const mockClients = generateMockClients(15);
-    const foundClient = mockClients.find((c) => c.id === id);
+    const fetchClientData = async () => {
+      try {
+        setLoading(true);
+        if (!id) {
+          toast({
+            title: "Error",
+            description: "Client ID is missing",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        const clientData = await getClientById(id);
+        setClient(clientData);
+        
+        const propertiesData = await getClientProperties(id);
+        setProperties(propertiesData);
+        
+        const invoicesData = await getClientInvoices(id);
+        setInvoices(invoicesData);
+      } catch (error: any) {
+        console.error("Error fetching client data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load client details: " + (error.message || "Unknown error"),
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    if (foundClient) {
-      setClient(foundClient);
-      
-      // Generate mock projects for this client
-      const mockProjects = generateMockProjects([foundClient], 
-        Math.max(3, Math.floor(Math.random() * 8))
-      );
-      setClientProjects(mockProjects);
-    }
-  }, [id]);
+    fetchClientData();
+  }, [id, toast]);
 
-  const handleUpdateClient = (clientData: Omit<Client, "id" | "createdAt">) => {
-    if (client) {
-      const updatedClient = {
-        ...client,
-        ...clientData,
-      };
-      setClient(updatedClient);
-      setIsEditDialogOpen(false);
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const handleEdit = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!id) return;
+    
+    try {
+      await deleteClient(id);
+      toast({
+        title: "Client Deleted",
+        description: `Client "${client?.name}" has been deleted successfully.`
+      });
+      navigate("/clients");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete client: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
     }
   };
+
+  const handleUpdateClient = async (clientData: Omit<Client, "id" | "createdAt" | "updatedAt">) => {
+    if (!id || !client) return;
+    
+    try {
+      const updatedClient = await updateClient(id, clientData);
+      setClient({
+        ...updatedClient,
+        properties: client.properties,
+        totalAmount: client.totalAmount,
+        totalPaid: client.totalPaid
+      });
+      setIsEditDialogOpen(false);
+      
+      toast({
+        title: "Client Updated",
+        description: `Client "${updatedClient.name}" has been updated successfully.`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update client: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePropertyClick = (propertyId: string, estateId: string) => {
+    navigate(`/estates/${estateId}`);
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-64">
+          <p className="text-lg text-muted-foreground">Loading client details...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!client) {
     return (
       <Layout>
-        <div>Client not found</div>
+        <div className="flex flex-col items-center justify-center h-64">
+          <p className="text-lg text-muted-foreground">Client not found</p>
+          <Button onClick={handleBack} variant="outline" className="mt-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        </div>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => navigate("/clients")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Clients
-        </Button>
-
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-          <h1 className="text-3xl font-bold">{client.name}</h1>
-          <div className="mt-4 sm:mt-0">
-            <Button onClick={() => setIsEditDialogOpen(true)}>Edit Client</Button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div className="flex items-center gap-2">
+          <Button onClick={handleBack} variant="ghost" className="p-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-white">{client.name}</h1>
+            <p className="text-muted-foreground">
+              Unique ID: {client.uniqueId} | Type: {client.type}
+            </p>
           </div>
+        </div>
+        <div className="flex mt-4 sm:mt-0 gap-2">
+          <Button onClick={handleEdit} className="apple-button-secondary">
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Client
+          </Button>
+          <Button onClick={handleDelete} variant="destructive">
+            <Trash className="mr-2 h-4 w-4" />
+            Delete Client
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Contact Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-sm text-estate-muted">Email</dt>
-                <dd>{client.email}</dd>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+        <TabsList className="grid w-full max-w-md grid-cols-3 mb-8">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="properties">Properties</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="glass-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Contact Information</h3>
+                  <Building className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p>{client.email || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Phone</p>
+                    <p>{client.phone || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Company</p>
+                    <p>{client.company || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <p>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        client.status === "Active" ? "bg-green-500/20 text-green-300" : 
+                        client.status === "Inactive" ? "bg-gray-500/20 text-gray-300" : 
+                        "bg-blue-500/20 text-blue-300"
+                      }`}>
+                        {client.status}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="glass-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Properties</h3>
+                  <Home className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Properties</p>
+                    <p className="text-2xl font-bold">{properties.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Value</p>
+                    <p className="text-2xl font-bold">₦{(client.totalAmount || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="glass-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Payments</h3>
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Amount Paid</p>
+                    <p className="text-2xl font-bold">₦{(client.totalPaid || 0).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Balance</p>
+                    <p className="text-2xl font-bold">₦{((client.totalAmount || 0) - (client.totalPaid || 0)).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Payment Status</p>
+                    <p>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        (client.totalPaid || 0) >= (client.totalAmount || 0) ? "bg-green-500/20 text-green-300" : 
+                        (client.totalPaid || 0) > 0 ? "bg-amber-500/20 text-amber-300" : 
+                        "bg-red-500/20 text-red-300"
+                      }`}>
+                        {(client.totalPaid || 0) >= (client.totalAmount || 0) ? "Paid" : 
+                         (client.totalPaid || 0) > 0 ? "Partial" : "Pending"}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Recent Activity</h3>
               </div>
-              <div>
-                <dt className="text-sm text-estate-muted">Phone</dt>
-                <dd>{client.phone}</dd>
+              <p className="text-center text-muted-foreground py-4">
+                Activity tracking will be implemented in the next version.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="properties" className="space-y-6">
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Properties ({properties.length})</h3>
+                <Button 
+                  variant="outline" 
+                  className="ml-auto"
+                  onClick={() => navigate("/")}
+                >
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  New Property
+                </Button>
               </div>
-              {client.company && (
-                <div>
-                  <dt className="text-sm text-estate-muted">Company</dt>
-                  <dd>{client.company}</dd>
+              
+              {properties.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-slate-900/40">
+                      <TableRow>
+                        <TableHead>Estate</TableHead>
+                        <TableHead>Plot Numbers</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Paid</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Next Due</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {properties.map((property) => (
+                        <TableRow 
+                          key={property.id} 
+                          className="cursor-pointer hover:bg-white/5 transition-colors"
+                          onClick={() => handlePropertyClick(property.id, property.estateName || "")}
+                        >
+                          <TableCell>{property.estateName || "Unknown"}</TableCell>
+                          <TableCell>{property.plotNumbers.join(", ")}</TableCell>
+                          <TableCell>₦{property.amount.toLocaleString()}</TableCell>
+                          <TableCell>₦{property.amountPaid.toLocaleString()}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              property.paymentStatus === "Paid" ? "bg-green-500/20 text-green-300" : 
+                              property.paymentStatus === "Partial" ? "bg-amber-500/20 text-amber-300" : 
+                              property.paymentStatus === "Overdue" ? "bg-red-500/20 text-red-300" : 
+                              "bg-blue-500/20 text-blue-300"
+                            }`}>
+                              {property.paymentStatus}
+                            </span>
+                          </TableCell>
+                          <TableCell>{property.nextDueDate || "N/A"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <Home className="h-12 w-12 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">This client has no properties yet.</p>
+                  <Button className="mt-4" onClick={() => navigate("/")}>
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    Add Property
+                  </Button>
                 </div>
               )}
-            </dl>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="invoices" className="space-y-6">
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Invoices ({invoices.length})</h3>
+                <Button 
+                  variant="outline" 
+                  className="ml-auto"
+                  onClick={() => toast({
+                    title: "Coming Soon",
+                    description: "Invoice creation will be implemented in the next version."
+                  })}
+                >
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  New Invoice
+                </Button>
+              </div>
+              
+              {invoices.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-slate-900/40">
+                      <TableRow>
+                        <TableHead>Invoice #</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Paid</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invoices.map((invoice) => (
+                        <TableRow 
+                          key={invoice.id} 
+                          className="cursor-pointer hover:bg-white/5 transition-colors"
+                        >
+                          <TableCell>{invoice.id.substring(0, 8).toUpperCase()}</TableCell>
+                          <TableCell>{new Date(invoice.issuedDate).toLocaleDateString()}</TableCell>
+                          <TableCell>{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "N/A"}</TableCell>
+                          <TableCell>₦{invoice.amount.toLocaleString()}</TableCell>
+                          <TableCell>₦{invoice.amountPaid.toLocaleString()}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              invoice.status === "Paid" ? "bg-green-500/20 text-green-300" : 
+                              invoice.status === "Partial" ? "bg-amber-500/20 text-amber-300" : 
+                              invoice.status === "Overdue" ? "bg-red-500/20 text-red-300" : 
+                              "bg-blue-500/20 text-blue-300"
+                            }`}>
+                              {invoice.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">No invoices found for this client.</p>
+                  <Button 
+                    className="mt-4" 
+                    onClick={() => toast({
+                      title: "Coming Soon",
+                      description: "Invoice creation will be implemented in the next version."
+                    })}
+                  >
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    Create Invoice
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Client Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-sm text-estate-muted">Type</dt>
-                <dd>{client.type}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-estate-muted">Status</dt>
-                <dd>{client.status}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-estate-muted">Client Since</dt>
-                <dd>{client.createdAt}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Projects Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-estate-muted">Total Projects</p>
-                <p className="text-2xl font-bold">{clientProjects.length}</p>
-              </div>
-              <div>
-                <p className="text-sm text-estate-muted">Active Projects</p>
-                <p className="text-xl">
-                  {clientProjects.filter(p => p.status === "In Progress").length}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-estate-muted">Total Value</p>
-                <p className="text-xl">
-                  ${clientProjects.reduce((sum, p) => sum + p.budget, 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Client Projects</CardTitle>
-          <CardDescription>Projects associated with {client.name}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={clientProjects}
-            columns={[
-              { key: "name", header: "Project Name" },
-              { key: "type", header: "Type" },
-              { key: "status", header: "Status" },
-              { 
-                key: "budget", 
-                header: "Budget",
-                renderCell: (project: Project) => `$${project.budget.toLocaleString()}` 
-              },
-              { key: "startDate", header: "Start Date" },
-            ]}
-            onRowClick={(project) => navigate(`/projects/${project.id}`)}
-          />
-        </CardContent>
-      </Card>
-
+      {/* Edit Client Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="glass-card max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Client</DialogTitle>
+            <DialogTitle className="text-gradient">Edit Client</DialogTitle>
           </DialogHeader>
-          <ClientForm
-            client={client}
-            onSubmit={handleUpdateClient}
-            onCancel={() => setIsEditDialogOpen(false)}
-          />
+          {client && (
+            <ClientForm
+              client={client}
+              onSubmit={handleUpdateClient}
+              onCancel={() => setIsEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Client Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="glass-card">
+          <DialogHeader>
+            <DialogTitle className="text-gradient">Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the client "{client.name}"? This will not delete associated properties, but will remove the link to this client. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)} 
+              className="apple-button-secondary"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Layout>

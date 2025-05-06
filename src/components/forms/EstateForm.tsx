@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EstateEntry } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { findClientsByUniqueId } from "@/services/clientData";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import { Check, Search, UserPlus } from "lucide-react";
 
 interface EstateFormProps {
   entry?: EstateEntry | null;
@@ -33,8 +40,11 @@ const EstateForm = ({ entry, onSubmit, onCancel }: EstateFormProps) => {
     address: entry?.address || "",
     paymentStatus: entry?.paymentStatus || "Pending",
     nextDueDate: entry?.nextDueDate || new Date().toISOString().split('T')[0],
+    clientId: entry?.clientId || "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [clientSearchResults, setClientSearchResults] = useState<Array<{id: string, name: string, uniqueId: string}>>([]);
+  const [isSearchingClients, setIsSearchingClients] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (
@@ -53,6 +63,11 @@ const EstateForm = ({ entry, onSubmit, onCancel }: EstateFormProps) => {
         [name]: "",
       }));
     }
+    
+    // If uniqueId is changed, search for clients
+    if (name === "uniqueId" && value.length >= 3) {
+      searchClients(value);
+    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -68,6 +83,33 @@ const EstateForm = ({ entry, onSubmit, onCancel }: EstateFormProps) => {
         [name]: "",
       }));
     }
+  };
+
+  const searchClients = async (query: string) => {
+    if (query.length < 3) return;
+    
+    setIsSearchingClients(true);
+    try {
+      const clients = await findClientsByUniqueId(query);
+      setClientSearchResults(clients.map(client => ({
+        id: client.id,
+        name: client.name,
+        uniqueId: client.uniqueId
+      })));
+    } catch (error) {
+      console.error("Error searching clients:", error);
+    } finally {
+      setIsSearchingClients(false);
+    }
+  };
+
+  const selectClient = (client: {id: string, name: string, uniqueId: string}) => {
+    setFormData(prev => ({
+      ...prev,
+      clientId: client.id,
+      clientName: client.name,
+      uniqueId: client.uniqueId,
+    }));
   };
 
   const validateForm = () => {
@@ -100,6 +142,7 @@ const EstateForm = ({ entry, onSubmit, onCancel }: EstateFormProps) => {
         amount: Number(formData.amount),
         amountPaid: Number(formData.amountPaid),
         paymentStatus: formData.paymentStatus as "Paid" | "Partial" | "Pending" | "Overdue",
+        clientId: formData.clientId || undefined
       };
       
       onSubmit(entryData);
@@ -113,6 +156,83 @@ const EstateForm = ({ entry, onSubmit, onCancel }: EstateFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="col-span-2">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="uniqueId">Client Unique ID</Label>
+            {formData.clientId && <Check className="h-4 w-4 text-green-500" />}
+          </div>
+          <div className="flex gap-2 mt-1">
+            <div className="relative flex-1">
+              <Input
+                id="uniqueId"
+                name="uniqueId"
+                value={formData.uniqueId}
+                onChange={handleChange}
+                className={errors.uniqueId ? "border-red-500" : ""}
+                placeholder="Enter unique client ID"
+              />
+              {errors.uniqueId && (
+                <p className="text-sm text-red-500 mt-1">{errors.uniqueId}</p>
+              )}
+            </div>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button type="button" size="icon" variant="outline">
+                  <Search className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-4 border-b">
+                  <h4 className="font-medium">Find Existing Client</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Search for an existing client by unique ID
+                  </p>
+                </div>
+                <div className="p-4">
+                  <Input 
+                    placeholder="Search clients..."
+                    onChange={(e) => searchClients(e.target.value)}
+                  />
+                  
+                  <div className="mt-2 max-h-48 overflow-y-auto">
+                    {isSearchingClients ? (
+                      <div className="text-center py-2 text-sm text-muted-foreground">
+                        Searching...
+                      </div>
+                    ) : clientSearchResults.length > 0 ? (
+                      clientSearchResults.map(client => (
+                        <div 
+                          key={client.id}
+                          className="py-2 px-2 hover:bg-accent rounded-md cursor-pointer flex justify-between items-center"
+                          onClick={() => selectClient(client)}
+                        >
+                          <div>
+                            <div className="font-medium">{client.name}</div>
+                            <div className="text-sm text-muted-foreground">{client.uniqueId}</div>
+                          </div>
+                          <Button type="button" size="sm" variant="ghost">
+                            Select
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-2 text-sm text-muted-foreground">
+                        No clients found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {formData.clientId ? 
+              "This entry will be linked to an existing client" : 
+              "If a client with this ID exists, the entry will be linked automatically"}
+          </p>
+        </div>
+
         <div>
           <Label htmlFor="clientName">Client Name</Label>
           <Input
@@ -124,20 +244,6 @@ const EstateForm = ({ entry, onSubmit, onCancel }: EstateFormProps) => {
           />
           {errors.clientName && (
             <p className="text-sm text-red-500 mt-1">{errors.clientName}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="uniqueId">Unique ID</Label>
-          <Input
-            id="uniqueId"
-            name="uniqueId"
-            value={formData.uniqueId}
-            onChange={handleChange}
-            className={errors.uniqueId ? "border-red-500" : ""}
-          />
-          {errors.uniqueId && (
-            <p className="text-sm text-red-500 mt-1">{errors.uniqueId}</p>
           )}
         </div>
 

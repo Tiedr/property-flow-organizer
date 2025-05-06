@@ -20,7 +20,10 @@ export const getAllEstates = async (): Promise<Estate[]> => {
       (estates || []).map(async (estate) => {
         const { data: entries, error: entriesError } = await supabase
           .from('estate_entries')
-          .select('*')
+          .select(`
+            *,
+            clients:client_id (id, unique_id, name, email, phone)
+          `)
           .eq('estate_id', estate.id);
         
         if (entriesError) {
@@ -47,7 +50,15 @@ export const getAllEstates = async (): Promise<Estate[]> => {
           email: entry.email || "",
           address: entry.address || "",
           paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-          nextDueDate: entry.next_due_date || ""
+          nextDueDate: entry.next_due_date || "",
+          clientId: entry.client_id || undefined,
+          clientDetails: entry.clients ? {
+            id: entry.clients.id,
+            name: entry.clients.name,
+            uniqueId: entry.clients.unique_id,
+            email: entry.clients.email,
+            phone: entry.clients.phone
+          } : undefined
         })) : [];
         
         return {
@@ -83,7 +94,10 @@ export const getEstateById = async (id: string): Promise<Estate | undefined> => 
     
     const { data: entries, error: entriesError } = await supabase
       .from('estate_entries')
-      .select('*')
+      .select(`
+        *,
+        clients:client_id (id, unique_id, name, email, phone)
+      `)
       .eq('estate_id', id);
     
     if (entriesError) {
@@ -104,7 +118,15 @@ export const getEstateById = async (id: string): Promise<Estate | undefined> => 
       email: entry.email || "",
       address: entry.address || "",
       paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-      nextDueDate: entry.next_due_date || ""
+      nextDueDate: entry.next_due_date || "",
+      clientId: entry.client_id || undefined,
+      clientDetails: entry.clients ? {
+        id: entry.clients.id,
+        name: entry.clients.name,
+        uniqueId: entry.clients.unique_id,
+        email: entry.clients.email,
+        phone: entry.clients.phone
+      } : undefined
     })) : [];
     
     return {
@@ -226,16 +248,53 @@ export const deleteEstate = async (id: string): Promise<boolean> => {
   }
 };
 
-// Create a new estate entry
+// Create a new estate entry with optional client linking
 export const createEstateEntry = async (
   estateId: string, 
   entry: Omit<EstateEntry, "id">
 ): Promise<EstateEntry> => {
   try {
+    // First, check if there's an existing client with the uniqueId
+    let clientId = entry.clientId;
+    
+    if (!clientId && entry.uniqueId) {
+      const { data: existingClients } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('unique_id', entry.uniqueId)
+        .limit(1);
+      
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else if (entry.clientName) {
+        // Create a new client if none exists
+        const { data: newClient, error: clientError } = await supabase
+          .from('clients')
+          .insert({
+            unique_id: entry.uniqueId,
+            name: entry.clientName,
+            email: entry.email,
+            phone: entry.phoneNumber,
+            type: 'Individual',
+            status: 'Active'
+          })
+          .select()
+          .single();
+          
+        if (clientError) {
+          console.error("Error creating client:", clientError);
+        } else if (newClient) {
+          clientId = newClient.id;
+        }
+      }
+    }
+    
+    // Now create the estate entry
     const { data, error } = await supabase
       .from('estate_entries')
       .insert({
         estate_id: estateId,
+        client_id: clientId,
         client_name: entry.clientName,
         unique_id: entry.uniqueId,
         representative: entry.representative,
@@ -251,7 +310,10 @@ export const createEstateEntry = async (
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .select()
+      .select(`
+        *,
+        clients:client_id (id, unique_id, name, email, phone)
+      `)
       .single();
     
     if (error) {
@@ -276,7 +338,15 @@ export const createEstateEntry = async (
       email: data.email || "",
       address: data.address || "",
       paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-      nextDueDate: data.next_due_date || ""
+      nextDueDate: data.next_due_date || "",
+      clientId: data.client_id,
+      clientDetails: data.clients ? {
+        id: data.clients.id,
+        name: data.clients.name,
+        uniqueId: data.clients.unique_id,
+        email: data.clients.email,
+        phone: data.clients.phone
+      } : undefined
     };
   } catch (error) {
     console.error("Error creating estate entry:", error);
@@ -284,15 +354,51 @@ export const createEstateEntry = async (
   }
 };
 
-// Update an estate entry
+// Update an estate entry with client linking
 export const updateEstateEntry = async (
   entryId: string, 
   entry: Omit<EstateEntry, "id">
 ): Promise<EstateEntry> => {
   try {
+    // Check if there's an existing client with the uniqueId
+    let clientId = entry.clientId;
+    
+    if (!clientId && entry.uniqueId) {
+      const { data: existingClients } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('unique_id', entry.uniqueId)
+        .limit(1);
+      
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else if (entry.clientName) {
+        // Create a new client if none exists
+        const { data: newClient, error: clientError } = await supabase
+          .from('clients')
+          .insert({
+            unique_id: entry.uniqueId,
+            name: entry.clientName,
+            email: entry.email,
+            phone: entry.phoneNumber,
+            type: 'Individual',
+            status: 'Active'
+          })
+          .select()
+          .single();
+          
+        if (clientError) {
+          console.error("Error creating client:", clientError);
+        } else if (newClient) {
+          clientId = newClient.id;
+        }
+      }
+    }
+    
     const { data, error } = await supabase
       .from('estate_entries')
       .update({
+        client_id: clientId,
         client_name: entry.clientName,
         unique_id: entry.uniqueId,
         representative: entry.representative,
@@ -308,7 +414,10 @@ export const updateEstateEntry = async (
         updated_at: new Date().toISOString()
       })
       .eq('id', entryId)
-      .select()
+      .select(`
+        *,
+        clients:client_id (id, unique_id, name, email, phone)
+      `)
       .single();
     
     if (error) {
@@ -333,7 +442,15 @@ export const updateEstateEntry = async (
       email: data.email || "",
       address: data.address || "",
       paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
-      nextDueDate: data.next_due_date || ""
+      nextDueDate: data.next_due_date || "",
+      clientId: data.client_id,
+      clientDetails: data.clients ? {
+        id: data.clients.id,
+        name: data.clients.name,
+        uniqueId: data.clients.unique_id,
+        email: data.clients.email,
+        phone: data.clients.phone
+      } : undefined
     };
   } catch (error) {
     console.error("Error updating estate entry:", error);

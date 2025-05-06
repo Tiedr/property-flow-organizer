@@ -9,11 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          status: string
+          type: string
+          unique_id: string
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          status?: string
+          type?: string
+          unique_id: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          type?: string
+          unique_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       estate_entries: {
         Row: {
           address: string | null
           amount: number
           amount_paid: number
+          client_id: string | null
           client_name: string
           created_at: string
           documents_received: string[] | null
@@ -32,6 +72,7 @@ export type Database = {
           address?: string | null
           amount?: number
           amount_paid?: number
+          client_id?: string | null
           client_name: string
           created_at?: string
           documents_received?: string[] | null
@@ -50,6 +91,7 @@ export type Database = {
           address?: string | null
           amount?: number
           amount_paid?: number
+          client_id?: string | null
           client_name?: string
           created_at?: string
           documents_received?: string[] | null
@@ -65,6 +107,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "estate_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "estate_entries_estate_id_fkey"
             columns: ["estate_id"]
@@ -97,6 +146,95 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      invoice_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          estate_entry_id: string | null
+          id: string
+          invoice_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          estate_entry_id?: string | null
+          id?: string
+          invoice_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          estate_entry_id?: string | null
+          id?: string
+          invoice_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_estate_entry_id_fkey"
+            columns: ["estate_entry_id"]
+            isOneToOne: false
+            referencedRelation: "estate_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount: number
+          amount_paid: number
+          client_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          issued_date: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          amount_paid?: number
+          client_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          issued_date?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          amount_paid?: number
+          client_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          issued_date?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

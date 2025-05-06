@@ -13,6 +13,8 @@ import PromoteAdmin from "./pages/PromoteAdmin";
 import ResetPassword from "./pages/ResetPassword";
 import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard";
+import Clients from "./pages/Clients";
+import ClientDetail from "./pages/ClientDetail";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,16 @@ const App = () => (
             <Route path="/estates/:id" element={
               <AuthGuard>
                 <EstateDetailPage />
+              </AuthGuard>
+            } />
+            <Route path="/clients" element={
+              <AuthGuard>
+                <Clients />
+              </AuthGuard>
+            } />
+            <Route path="/clients/:id" element={
+              <AuthGuard>
+                <ClientDetail />
               </AuthGuard>
             } />
             <Route path="/users" element={

@@ -13,6 +13,7 @@ export interface EstateEntry {
   address: string;
   paymentStatus: "Paid" | "Partial" | "Pending" | "Overdue";
   nextDueDate: string;
+  clientId?: string;
 }
 
 export interface Estate {
@@ -26,14 +27,18 @@ export interface Estate {
 
 export interface Client {
   id: string;
+  uniqueId: string;
   name: string;
   email: string;
   phone: string;
   company?: string;
   type: "Individual" | "Company";
   status: "Active" | "Inactive" | "Lead";
-  projects: number;
   createdAt: string;
+  updatedAt: string;
+  properties?: number;
+  totalAmount?: number;
+  totalPaid?: number;
 }
 
 export interface Project {
@@ -48,4 +53,29 @@ export interface Project {
   endDate?: string;
   location?: string;
   createdAt: string;
+}
+
+export interface Invoice {
+  id: string;
+  clientId: string;
+  clientName?: string;
+  amount: number;
+  amountPaid: number;
+  status: "Paid" | "Partial" | "Pending" | "Overdue";
+  dueDate?: string;
+  issuedDate: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  items?: InvoiceItem[];
+}
+
+export interface InvoiceItem {
+  id: string;
+  invoiceId: string;
+  estateEntryId?: string;
+  description: string;
+  amount: number;
+  createdAt: string;
+  plotDetails?: string;
 }
