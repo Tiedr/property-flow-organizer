@@ -26,7 +26,7 @@ const Projects = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Fix the type error here by changing "projects" to one of the allowed types
+  // Fix the type error by changing to allowed type
   const [importType, setImportType] = useState<"estates" | "clients" | "invoices">("clients");
 
   useEffect(() => {
@@ -188,7 +188,7 @@ const Projects = () => {
             <DialogTitle className="text-gradient">Import Projects</DialogTitle>
           </DialogHeader>
           <ImportData 
-            type="projects" 
+            type="clients" 
             onImport={handleImportProjects} 
             onCancel={() => setIsImportProjectOpen(false)}
           />

@@ -117,6 +117,17 @@ export const getClientById = async (id: string): Promise<Client | undefined> => 
   });
 };
 
+export const findClientsByUniqueId = async (query: string): Promise<Client[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const filteredClients = mockClients.filter((client) => 
+        client.uniqueId.toLowerCase().includes(query.toLowerCase())
+      );
+      resolve(filteredClients);
+    }, 200);
+  });
+};
+
 export const createClient = async (clientData: Omit<Client, "id" | "createdAt" | "updatedAt">): Promise<Client> => {
   return new Promise((resolve) => {
     setTimeout(() => {
