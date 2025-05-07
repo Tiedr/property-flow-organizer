@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from "uuid";
 import { Estate, EstateEntry } from "@/types";
 
@@ -117,22 +118,15 @@ export const deleteEstate = async (id: string): Promise<boolean> => {
   });
 };
 
+// Add the missing functions for estate entries
 export const createEntry = async (estateId: string, entryData: Omit<EstateEntry, "id">): Promise<EstateEntry | undefined> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const estate = mockEstates.find((estate) => estate.id === estateId);
       if (estate) {
-        const { clientId, clientName, email, phoneNumber, ...rest } = entryData;
-
         const newEntry: EstateEntry = {
           id: uuidv4(),
-          ...rest,
-          clientDetails: {
-            id: clientId || "",
-            name: clientName,
-            email: email || "",
-            phone: phoneNumber || "",
-          },
+          ...entryData,
         };
         estate.entries.push(newEntry);
         resolve(newEntry);
@@ -143,28 +137,18 @@ export const createEntry = async (estateId: string, entryData: Omit<EstateEntry,
   });
 };
 
-export const updateEntry = async (estateId: string, entryId: string, updates: Partial<Omit<EstateEntry, "id">>): Promise<EstateEntry | undefined> => {
+export const updateEntry = async (estateId: string, entryId: string, updates: Partial<EstateEntry>): Promise<EstateEntry | undefined> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const estate = mockEstates.find((estate) => estate.id === estateId);
       if (estate) {
         const entryIndex = estate.entries.findIndex((entry) => entry.id === entryId);
         if (entryIndex !== -1) {
-          const existingEntry = estate.entries[entryIndex];
-          const { clientId, clientName, email, phoneNumber, ...rest } = updates;
-
-          const updatedEntry: EstateEntry = {
-            ...existingEntry,
-            ...rest,
-            clientDetails: {
-              id: clientId || existingEntry.clientId || "",
-              name: clientName,
-              email: email || existingEntry.email,
-              phone: phoneNumber || existingEntry.phoneNumber,
-            },
+          estate.entries[entryIndex] = {
+            ...estate.entries[entryIndex],
+            ...updates,
           };
-          estate.entries[entryIndex] = updatedEntry;
-          resolve(updatedEntry);
+          resolve(estate.entries[entryIndex]);
         } else {
           resolve(undefined);
         }
@@ -193,3 +177,8 @@ export const deleteEntry = async (estateId: string, entryId: string): Promise<bo
     }, 200);
   });
 };
+
+// Aliases for the functions to match the imports in EstateDetailPage.tsx
+export const createEstateEntry = createEntry;
+export const updateEstateEntry = updateEntry;
+export const deleteEstateEntry = deleteEntry;

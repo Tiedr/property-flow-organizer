@@ -134,44 +134,44 @@ const EstateDetailPage = () => {
   };
 
   const handleEntrySubmit = async (entryData: Omit<EstateEntry, "id">) => {
-    if (!estate) return;
+    if (!estate || !id) return;
     
     try {
       if (selectedEntry) {
         // Edit existing entry
-        const updatedEntry = await updateEstateEntry(selectedEntry.id, entryData);
+        const updatedEntry = await updateEstateEntry(id, selectedEntry.id, entryData);
         
         // Update the local state
-        const updatedEntries = estate.entries.map(entry => 
-          entry.id === selectedEntry.id ? updatedEntry : entry
-        );
-        
-        const updatedEstate = {
-          ...estate,
-          entries: updatedEntries,
-        };
-        
-        setEstate(updatedEstate);
-        
-        toast({
-          title: "Entry Updated",
-          description: `Entry ${entryData.uniqueId} has been updated successfully.`
-        });
+        if (updatedEntry && estate) {
+          const updatedEntries = estate.entries.map(entry => 
+            entry.id === selectedEntry.id ? updatedEntry : entry
+          );
+          
+          setEstate({
+            ...estate,
+            entries: updatedEntries,
+          });
+          
+          toast({
+            title: "Entry Updated",
+            description: `Entry ${entryData.uniqueId} has been updated successfully.`
+          });
+        }
       } else {
         // Add new entry
-        const newEntry = await createEstateEntry(estate.id, entryData);
+        const newEntry = await createEstateEntry(id, entryData);
         
-        const updatedEstate = {
-          ...estate,
-          entries: [...estate.entries, newEntry]
-        };
-        
-        setEstate(updatedEstate);
-        
-        toast({
-          title: "Entry Added",
-          description: `Entry ${newEntry.uniqueId} has been added to ${estate.name}.`
-        });
+        if (newEntry && estate) {
+          setEstate({
+            ...estate,
+            entries: [...estate.entries, newEntry]
+          });
+          
+          toast({
+            title: "Entry Added",
+            description: `Entry ${newEntry.uniqueId} has been added to ${estate.name}.`
+          });
+        }
       }
       
       setIsAddEntryDialogOpen(false);
@@ -194,27 +194,26 @@ const EstateDetailPage = () => {
   };
 
   const handleDeleteEntry = async (entryId: string) => {
-    if (!estate) return;
-    // Remove isAdmin check to allow all authenticated users to delete entries
+    if (!estate || !id) return;
     
     try {
       const entryToDelete = estate.entries.find(entry => entry.id === entryId);
       if (!entryToDelete) return;
       
-      await deleteEstateEntry(entryId);
+      const success = await deleteEstateEntry(id, entryId);
       
-      const updatedEntries = estate.entries.filter(entry => entry.id !== entryId);
-      const updatedEstate = {
-        ...estate,
-        entries: updatedEntries
-      };
-      
-      setEstate(updatedEstate);
-      
-      toast({
-        title: "Entry Deleted",
-        description: `Entry ${entryToDelete.uniqueId} has been deleted from ${estate.name}.`
-      });
+      if (success) {
+        const updatedEntries = estate.entries.filter(entry => entry.id !== entryId);
+        setEstate({
+          ...estate,
+          entries: updatedEntries
+        });
+        
+        toast({
+          title: "Entry Deleted",
+          description: `Entry ${entryToDelete.uniqueId} has been deleted from ${estate.name}.`
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -233,7 +232,7 @@ const EstateDetailPage = () => {
   };
 
   const handleSaveEstate = async () => {
-    if (!estate) return;
+    if (!estate || !id) return;
     
     if (!editedEstate.name.trim()) {
       toast({
@@ -245,20 +244,22 @@ const EstateDetailPage = () => {
     }
     
     try {
-      const updatedEstate = {
-        ...estate,
+      const updatedData = {
         name: editedEstate.name,
         description: editedEstate.description
       };
       
-      await updateEstate(updatedEstate);
-      setEstate(updatedEstate);
-      setIsEditDialogOpen(false);
+      const updatedEstate = await updateEstate(id, updatedData);
       
-      toast({
-        title: "Estate Updated",
-        description: `Estate details have been updated successfully.`
-      });
+      if (updatedEstate) {
+        setEstate(updatedEstate);
+        setIsEditDialogOpen(false);
+        
+        toast({
+          title: "Estate Updated",
+          description: `Estate details have been updated successfully.`
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
