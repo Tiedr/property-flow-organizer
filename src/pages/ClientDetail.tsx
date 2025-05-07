@@ -66,6 +66,7 @@ const ClientDetail = () => {
   }, [id, toast]);
 
   const handleBack = () => {
+    // Changed to use navigate(-1) which goes back to the previous page
     navigate(-1);
   };
 
@@ -123,6 +124,7 @@ const ClientDetail = () => {
   };
 
   const handlePropertyClick = (propertyId: string, estateId: string) => {
+    // Navigate to the estate detail page
     navigate(`/estates/${estateId}`);
   };
 
@@ -208,9 +210,9 @@ const ClientDetail = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-white">{client.name}</h1>
+            <h1 className="text-3xl font-bold text-white">{client?.name}</h1>
             <p className="text-muted-foreground">
-              Unique ID: {client.uniqueId} | Type: {client.type}
+              Unique ID: {client?.uniqueId} | Type: {client?.type}
             </p>
           </div>
         </div>

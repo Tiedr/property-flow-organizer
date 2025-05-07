@@ -15,6 +15,8 @@ import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +29,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={
+            {/* Updated routing to fix the 404 issue */}
+            <Route path="/" element={<Navigate to="/estates" />} />
+            <Route path="/estates" element={
               <AuthGuard>
                 <EstateTable />
               </AuthGuard>
@@ -47,6 +51,16 @@ const App = () => (
                 <ClientDetail />
               </AuthGuard>
             } />
+            <Route path="/projects" element={
+              <AuthGuard>
+                <Projects />
+              </AuthGuard>
+            } />
+            <Route path="/projects/:id" element={
+              <AuthGuard>
+                <ProjectDetail />
+              </AuthGuard>
+            } />
             <Route path="/users" element={
               <AuthGuard requireAdmin={true}>
                 <UserManagement />
@@ -60,6 +74,7 @@ const App = () => (
             } />
             {/* Add a redirect from /admin-setup for convenience */}
             <Route path="/admin-setup" element={<Navigate to="/reset-password" />} />
+            <Route path="/dashboard" element={<Navigate to="/estates" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -181,6 +181,7 @@ const Clients = () => {
               }
               return null;
             }}
+            tableClassName="text-white" // Add text-white class to ensure text is visible
           />
         )}
       </div>

@@ -6,13 +6,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect to dashboard
-    navigate("/dashboard");
+    // Redirect to estates page instead of dashboard
+    navigate("/estates");
   }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-estate-background">
-      <p className="text-white text-xl">Redirecting to dashboard...</p>
+      <p className="text-white text-xl">Redirecting to estates...</p>
     </div>
   );
 };
