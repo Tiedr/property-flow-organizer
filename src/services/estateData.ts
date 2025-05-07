@@ -12,6 +12,7 @@ const mockEstates: Estate[] = [
     entries: [
       {
         id: uuidv4(),
+        clientId: "1", // Ensure clientId is set properly
         clientName: "John Doe",
         uniqueId: "JD123",
         representative: "Jane Smith",
@@ -36,6 +37,7 @@ const mockEstates: Estate[] = [
     entries: [
       {
         id: uuidv4(),
+        clientId: "2", // Ensure clientId is set properly
         clientName: "Alice Maina",
         uniqueId: "AM456",
         representative: "Bob Kamau",
@@ -127,6 +129,8 @@ export const createEntry = async (estateId: string, entryData: Omit<EstateEntry,
         const newEntry: EstateEntry = {
           id: uuidv4(),
           ...entryData,
+          // Ensure new entries have a clientId if not provided
+          clientId: entryData.clientId || uuidv4(),
         };
         estate.entries.push(newEntry);
         resolve(newEntry);

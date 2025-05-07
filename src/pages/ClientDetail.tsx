@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -124,8 +123,16 @@ const ClientDetail = () => {
   };
 
   const handlePropertyClick = (propertyId: string, estateId: string) => {
-    // Navigate to the estate detail page
-    navigate(`/estates/${estateId}`);
+    // Navigate to the estate detail page with the correct estate ID
+    if (estateId) {
+      navigate(`/estates/${estateId}`);
+    } else {
+      toast({
+        title: "Error",
+        description: "Estate ID not found for this property",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleCreateInvoice = () => {
@@ -373,7 +380,7 @@ const ClientDetail = () => {
                         <TableRow 
                           key={property.id} 
                           className="cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handlePropertyClick(property.id, property.estateName || "")}
+                          onClick={() => handlePropertyClick(property.id, property.estateId || "")}
                         >
                           <TableCell>{property.estateName || "Unknown"}</TableCell>
                           <TableCell>{property.plotNumbers.join(", ")}</TableCell>

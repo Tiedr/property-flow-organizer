@@ -184,14 +184,14 @@ export const getClientProperties = async (clientId: string): Promise<EstateEntry
       
       for (const estate of estates) {
         const clientEntries = estate.entries.filter(
-          (entry) => entry.clientId === clientId || 
-                    entry.clientName.toLowerCase() === mockClients.find(c => c.id === clientId)?.name.toLowerCase()
+          (entry) => entry.clientId === clientId
         );
         
         // Add estate name to each entry
         const entriesWithEstateName = clientEntries.map(entry => ({
           ...entry,
-          estateName: estate.id, // Using estate.id here since that's what's used in handlePropertyClick
+          estateName: estate.name, // Use estate.name instead of estate.id
+          estateId: estate.id, // Add estateId to make navigation easier
         }));
         
         properties.push(...entriesWithEstateName);

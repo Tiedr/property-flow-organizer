@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -170,7 +171,16 @@ const EstateDetailPage = () => {
                 </Button>
               )}
               onRowClick={(entry) => {
-                navigate(`/clients/${entry.clientId}`);
+                // Fixed: Check if clientId exists and only navigate if it does
+                if (entry.clientId) {
+                  navigate(`/clients/${entry.clientId}`);
+                } else {
+                  toast({
+                    title: "Error",
+                    description: "Client ID not found for this entry",
+                    variant: "destructive",
+                  });
+                }
               }}
             />
           )}
