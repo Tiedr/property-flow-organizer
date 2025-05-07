@@ -5,14 +5,18 @@ import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Estate, EstateEntry } from "@/types";
-import { getEstateById } from "@/services/estateData";
+import { getEstateById, updateEstate, deleteEstate, deleteEstateEntry } from "@/services/estateData";
+import { createReceiptFromEstateEntry } from "@/services/invoiceData";
 import DataTable from "@/components/data/DataTable";
-import { FilePlus } from "lucide-react";
+import { Edit, FilePlus, Trash2, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
-import { createClientInvoice } from "@/services/clientData";
+import EstateForm from "@/components/forms/EstateForm";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import Receipt from "@/components/receipt/Receipt";
 
 const EstateDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,10 +25,20 @@ const EstateDetailPage = () => {
   const [estate, setEstate] = useState<Estate | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [selectedClientName, setSelectedClientName] = useState<string>("");
-  const [isCreateInvoiceDialogOpen, setIsCreateInvoiceDialogOpen] = useState(false);
-  const [invoiceAmount, setInvoiceAmount] = useState<string>("");
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [selectedEntryName, setSelectedEntryName] = useState<string>("");
+  const [isCreateReceiptDialogOpen, setIsCreateReceiptDialogOpen] = useState(false);
+  const [receiptAmount, setReceiptAmount] = useState<string>("");
+  const [receiptNotes, setReceiptNotes] = useState<string>("");
+  const [isEditEstateDialogOpen, setIsEditEstateDialogOpen] = useState(false);
+  const [isAddEntryDialogOpen, setIsAddEntryDialogOpen] = useState(false);
+  const [isEditEntryDialogOpen, setIsEditEntryDialogOpen] = useState(false);
+  const [isDeleteEstateConfirmOpen, setIsDeleteEstateConfirmOpen] = useState(false);
+  const [currentEntry, setCurrentEntry] = useState<EstateEntry | null>(null);
+  const [editEstateName, setEditEstateName] = useState("");
+  const [editEstateDescription, setEditEstateDescription] = useState("");
+  const [newReceipt, setNewReceipt] = useState<any>(null);
+  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchEstate = async () => {
@@ -40,6 +54,10 @@ const EstateDetailPage = () => {
         }
         const estateData = await getEstateById(id);
         setEstate(estateData);
+        if (estateData) {
+          setEditEstateName(estateData.name);
+          setEditEstateDescription(estateData.description || "");
+        }
       } catch (error: any) {
         console.error("Error fetching estate:", error);
         toast({
@@ -61,17 +79,22 @@ const EstateDetailPage = () => {
     navigate("/estates");
   };
 
-  const handleCreateInvoice = (clientId: string, clientName: string) => {
-    setSelectedClientId(clientId);
-    setSelectedClientName(clientName);
-    setIsCreateInvoiceDialogOpen(true);
+  const handleCreateReceipt = (entryId: string, entryName: string) => {
+    const entry = estate?.entries.find(e => e.id === entryId);
+    if (entry) {
+      const remainingAmount = entry.amount - entry.amountPaid;
+      setSelectedEntryId(entryId);
+      setSelectedEntryName(entryName);
+      setReceiptAmount(remainingAmount.toString());
+      setIsCreateReceiptDialogOpen(true);
+    }
   };
 
-  const handleInvoiceSubmit = async () => {
-    if (!selectedClientId) return;
+  const handleReceiptSubmit = async () => {
+    if (!selectedEntryId || !id) return;
     
     try {
-      const amount = parseFloat(invoiceAmount);
+      const amount = parseFloat(receiptAmount);
       
       if (isNaN(amount) || amount <= 0) {
         toast({
@@ -82,25 +105,145 @@ const EstateDetailPage = () => {
         return;
       }
       
-      await createClientInvoice(selectedClientId, {
+      const invoice = await createReceiptFromEstateEntry(
+        id,
+        selectedEntryId,
         amount,
-        status: "Pending",
-      });
+        receiptNotes
+      );
       
-      setIsCreateInvoiceDialogOpen(false);
-      setInvoiceAmount("");
+      setIsCreateReceiptDialogOpen(false);
+      setReceiptAmount("");
+      setReceiptNotes("");
+      setNewReceipt(invoice);
+      setIsReceiptDialogOpen(true);
+      
+      // Refresh estate data to show updated payment status
+      const updatedEstate = await getEstateById(id);
+      setEstate(updatedEstate);
       
       toast({
-        title: "Invoice Created",
-        description: `Invoice for ₦${amount.toLocaleString()} has been created for ${selectedClientName}.`
+        title: "Receipt Created",
+        description: `Receipt for ${amount.toLocaleString()} has been created for ${selectedEntryName}.`
       });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create invoice: " + (error.message || "Unknown error"),
+        description: "Failed to create receipt: " + (error.message || "Unknown error"),
         variant: "destructive"
       });
     }
+  };
+
+  const handleEditEstate = async () => {
+    if (!id) return;
+    
+    try {
+      await updateEstate(id, {
+        name: editEstateName,
+        description: editEstateDescription
+      });
+      
+      setEstate(prev => prev ? {
+        ...prev,
+        name: editEstateName,
+        description: editEstateDescription
+      } : undefined);
+      
+      setIsEditEstateDialogOpen(false);
+      
+      toast({
+        title: "Estate Updated",
+        description: "Estate details have been updated successfully."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update estate: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteEstate = async () => {
+    if (!id) return;
+    
+    try {
+      await deleteEstate(id);
+      navigate("/estates");
+      toast({
+        title: "Estate Deleted",
+        description: "Estate has been deleted successfully."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete estate: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditEntry = (entry: EstateEntry) => {
+    setCurrentEntry(entry);
+    setIsEditEntryDialogOpen(true);
+  };
+
+  const handleDeleteEntry = async (entryId: string) => {
+    if (!id) return;
+    
+    try {
+      await deleteEstateEntry(id, entryId);
+      
+      // Update the local state to reflect the deletion
+      setEstate(prev => {
+        if (!prev) return undefined;
+        return {
+          ...prev,
+          entries: prev.entries.filter(entry => entry.id !== entryId)
+        };
+      });
+      
+      toast({
+        title: "Entry Deleted",
+        description: "Entry has been deleted successfully."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete entry: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEntrySubmit = async (entryData: Omit<EstateEntry, "id">) => {
+    if (!id) return;
+    
+    try {
+      // Add the entry to the estate
+      const updatedEstate = await getEstateById(id);
+      setEstate(updatedEstate);
+      
+      setIsAddEntryDialogOpen(false);
+      setIsEditEntryDialogOpen(false);
+      
+      toast({
+        title: currentEntry ? "Entry Updated" : "Entry Added",
+        description: `Entry has been ${currentEntry ? "updated" : "added"} successfully.`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Failed to ${currentEntry ? "update" : "add"} entry: ` + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddEntry = () => {
+    setCurrentEntry(null);
+    setIsAddEntryDialogOpen(true);
   };
 
   if (loading) {
@@ -131,16 +274,53 @@ const EstateDetailPage = () => {
   return (
     <Layout>
       <div className="container mx-auto py-10">
-        <div className="mb-8">
-          <Button onClick={handleGoBack} variant="ghost">
-            ← Back to Estates
-          </Button>
-          <h1 className="text-3xl font-bold text-white mt-4">{estate.name}</h1>
-          <p className="text-muted-foreground">{estate.description || "No description provided"}</p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <Button onClick={handleGoBack} variant="ghost">
+              ← Back to Estates
+            </Button>
+            <h1 className="text-3xl font-bold text-white mt-4">{estate.name}</h1>
+            <p className="text-muted-foreground">{estate.description || "No description provided"}</p>
+          </div>
+          <div className="flex space-x-2">
+            <Button onClick={() => setIsEditEstateDialogOpen(true)} variant="outline">
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Estate
+            </Button>
+            <AlertDialog open={isDeleteEstateConfirmOpen} onOpenChange={setIsDeleteEstateConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Estate
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the estate and all its entries. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteEstate} className="bg-red-600 hover:bg-red-700">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         <div className="glass-card">
-          <h2 className="text-2xl font-semibold mb-4 text-white">Estate Entries</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-white">Estate Entries</h2>
+            <Button onClick={handleAddEntry} className="apple-button">
+              <FilePlus className="mr-2 h-4 w-4" />
+              Add Entry
+            </Button>
+          </div>
+          
           {estateEntries.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">No entries found for this estate.</p>
@@ -158,17 +338,39 @@ const EstateDetailPage = () => {
                 { key: "nextDueDate", header: "Next Due Date" },
               ]}
               actions={(entry) => (
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCreateInvoice(entry.clientId || "", entry.clientName);
-                  }}
-                  className="apple-button-secondary"
-                >
-                  <FilePlus className="mr-2 h-4 w-4" />
-                  Invoice
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCreateReceipt(entry.id, entry.clientName);
+                    }}
+                    className="apple-button-secondary"
+                  >
+                    <Save className="mr-1 h-4 w-4" />
+                    Receipt
+                  </Button>
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditEntry(entry);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm"
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEntry(entry.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
               onRowClick={(entry) => {
                 // Fixed: Check if clientId exists and only navigate if it does
@@ -187,24 +389,34 @@ const EstateDetailPage = () => {
         </div>
       </div>
       
-      {/* Create Invoice Dialog */}
-      <Dialog open={isCreateInvoiceDialogOpen} onOpenChange={setIsCreateInvoiceDialogOpen}>
+      {/* Create Receipt Dialog */}
+      <Dialog open={isCreateReceiptDialogOpen} onOpenChange={setIsCreateReceiptDialogOpen}>
         <DialogContent className="glass-card max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-gradient">Create New Invoice</DialogTitle>
+            <DialogTitle className="text-gradient">Create New Receipt</DialogTitle>
             <DialogDescription>
-              Create an invoice for client {selectedClientName}
+              Create a receipt for payment from client {selectedEntryName}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Invoice Amount (₦)</Label>
+              <Label htmlFor="amount">Payment Amount (₦)</Label>
               <Input
                 id="amount"
                 type="number"
                 placeholder="Enter amount"
-                value={invoiceAmount}
-                onChange={(e) => setInvoiceAmount(e.target.value)}
+                value={receiptAmount}
+                onChange={(e) => setReceiptAmount(e.target.value)}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add any notes about this payment"
+                value={receiptNotes}
+                onChange={(e) => setReceiptNotes(e.target.value)}
                 className="glass-input"
               />
             </div>
@@ -212,18 +424,101 @@ const EstateDetailPage = () => {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsCreateInvoiceDialogOpen(false)}
+              onClick={() => setIsCreateReceiptDialogOpen(false)}
               className="apple-button-secondary"
             >
               Cancel
             </Button>
             <Button
-              onClick={handleInvoiceSubmit}
+              onClick={handleReceiptSubmit}
               className="apple-button"
             >
-              Create Invoice
+              Create Receipt
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Estate Dialog */}
+      <Dialog open={isEditEstateDialogOpen} onOpenChange={setIsEditEstateDialogOpen}>
+        <DialogContent className="glass-card max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-gradient">Edit Estate</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editName">Estate Name</Label>
+              <Input
+                id="editName"
+                value={editEstateName}
+                onChange={(e) => setEditEstateName(e.target.value)}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editDescription">Description</Label>
+              <Textarea
+                id="editDescription"
+                value={editEstateDescription}
+                onChange={(e) => setEditEstateDescription(e.target.value)}
+                className="glass-input"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditEstateDialogOpen(false)}
+              className="apple-button-secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditEstate}
+              className="apple-button"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Entry Dialog */}
+      <Dialog open={isAddEntryDialogOpen || isEditEntryDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsAddEntryDialogOpen(false);
+          setIsEditEntryDialogOpen(false);
+        }
+      }}>
+        <DialogContent className="glass-card max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-gradient">
+              {currentEntry ? "Edit Entry" : "Add New Entry"}
+            </DialogTitle>
+          </DialogHeader>
+          <EstateForm 
+            entry={currentEntry}
+            onSubmit={handleEntrySubmit}
+            onCancel={() => {
+              setIsAddEntryDialogOpen(false);
+              setIsEditEntryDialogOpen(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Show Receipt Dialog */}
+      <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
+        <DialogContent className="glass-card max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-gradient">Payment Receipt</DialogTitle>
+          </DialogHeader>
+          {newReceipt && (
+            <Receipt 
+              invoice={newReceipt}
+              onClose={() => setIsReceiptDialogOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </Layout>
