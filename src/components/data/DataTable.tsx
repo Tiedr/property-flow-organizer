@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface Column {
   key: string;
   header: string;
+  renderCell?: (row: any, column: any) => React.ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -15,6 +16,7 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   renderCell?: (row: T, column: Column) => React.ReactNode;
   tableClassName?: string;
+  actions?: (row: T) => React.ReactNode;
 }
 
 const DataTable = <T,>({
@@ -24,6 +26,7 @@ const DataTable = <T,>({
   emptyMessage = "No data available",
   renderCell,
   tableClassName,
+  actions,
 }: DataTableProps<T>) => {
   return (
     <div className="overflow-auto">
@@ -35,12 +38,13 @@ const DataTable = <T,>({
                 {column.header}
               </TableHead>
             ))}
+            {actions && <TableHead className="text-white">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center py-8 text-white">
+              <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-8 text-white">
                 {emptyMessage}
               </TableCell>
             </TableRow>
@@ -56,9 +60,18 @@ const DataTable = <T,>({
               >
                 {columns.map((column) => (
                   <TableCell key={`${index}-${column.key}`} className="text-white">
-                    {renderCell ? renderCell(row, column) || row[column.key] : row[column.key]}
+                    {column.renderCell 
+                      ? column.renderCell(row, column)
+                      : renderCell 
+                        ? renderCell(row, column) || row[column.key] 
+                        : row[column.key]}
                   </TableCell>
                 ))}
+                {actions && (
+                  <TableCell key={`${index}-actions`} className="text-white" onClick={(e) => e.stopPropagation()}>
+                    {actions(row)}
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
