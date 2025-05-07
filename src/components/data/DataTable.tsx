@@ -14,9 +14,10 @@ export interface DataTableProps<T> {
   columns: {
     key: string;
     header: string;
+    renderCell?: (row: T) => React.ReactNode;
   }[];
   onRowClick?: (row: T) => void;
-  renderCell?: (row: T, column: { key: string; header: string }) => React.ReactNode;
+  renderCell?: (row: T, column: { key: string; header: string; renderCell?: (row: T) => React.ReactNode }) => React.ReactNode;
   emptyMessage?: string; // Add support for empty message
 }
 
@@ -56,7 +57,9 @@ function DataTable<T>({
             >
               {columns.map((column) => (
                 <TableCell key={`${rowIndex}-${column.key}`}>
-                  {renderCell ? (
+                  {column.renderCell ? (
+                    column.renderCell(row)
+                  ) : renderCell ? (
                     renderCell(row, column)
                   ) : (
                     <>{(row as any)[column.key]}</>

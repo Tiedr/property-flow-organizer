@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -18,11 +19,10 @@ import Logo from "./Logo";
 const Navbar = () => {
   const { user, signOut, isAdmin, isLoading, session } = useAuth();
   const isAuthenticated = !!user;
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-30 bg-gradient-to-r from-indigo-950 to-blue-950 border-b border-slate-800">
-      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
+    <div className="fixed top-0 left-0 right-0 z-30 h-16 bg-gradient-to-r from-indigo-950/90 to-blue-950/90 backdrop-blur-md border-b border-slate-800">
+      <div className="container mx-auto px-4 h-full flex justify-between items-center">
         <div className="flex items-center space-x-6">
           <Logo />
           
@@ -130,24 +130,6 @@ const Navbar = () => {
           </Sheet>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {/* <div className={`md:hidden bg-gray-900 ${isMobileMenuOpen ? 'block' : 'none'}`}>
-        <nav className="flex flex-col p-4 space-y-2">
-          <NavLink
-            to="/"
-            className="block text-white hover:bg-gray-800 p-2 rounded"
-          >
-            Estates
-          </NavLink>
-          <NavLink
-            to="/clients"
-            className="block text-white hover:bg-gray-800 p-2 rounded"
-          >
-            Clients
-          </NavLink>
-        </nav>
-      </div> */}
     </div>
   );
 };
