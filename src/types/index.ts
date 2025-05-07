@@ -1,4 +1,3 @@
-
 export interface EstateEntry {
   id: string;
   clientName: string;
@@ -15,6 +14,7 @@ export interface EstateEntry {
   nextDueDate: string;
   clientId?: string;
   estateName?: string; // Add this property to fix the TypeScript error
+  estateId?: string; // Add the estateId property
 }
 
 export interface Estate {
