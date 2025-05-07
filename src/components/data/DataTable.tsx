@@ -19,6 +19,7 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   renderCell?: (row: T, column: { key: string; header: string; renderCell?: (row: T) => React.ReactNode }) => React.ReactNode;
   emptyMessage?: string; // Add support for empty message
+  actions?: (row: T) => React.ReactNode; // Add support for row actions
 }
 
 function DataTable<T>({
@@ -26,7 +27,8 @@ function DataTable<T>({
   columns,
   onRowClick,
   renderCell,
-  emptyMessage = "No data available"
+  emptyMessage = "No data available",
+  actions
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
@@ -46,6 +48,7 @@ function DataTable<T>({
                 {column.header}
               </TableHead>
             ))}
+            {actions && <TableHead className="text-white/80">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -53,10 +56,12 @@ function DataTable<T>({
             <TableRow
               key={rowIndex}
               className={onRowClick ? "cursor-pointer hover:bg-white/5" : ""}
-              onClick={() => onRowClick && onRowClick(row)}
             >
               {columns.map((column) => (
-                <TableCell key={`${rowIndex}-${column.key}`}>
+                <TableCell 
+                  key={`${rowIndex}-${column.key}`}
+                  onClick={() => onRowClick && onRowClick(row)}
+                >
                   {column.renderCell ? (
                     column.renderCell(row)
                   ) : renderCell ? (
@@ -66,6 +71,11 @@ function DataTable<T>({
                   )}
                 </TableCell>
               ))}
+              {actions && (
+                <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
+                  {actions(row)}
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

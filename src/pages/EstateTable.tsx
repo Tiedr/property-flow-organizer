@@ -102,9 +102,7 @@ const EstateTable = () => {
     try {
       const newEstateObj = await createEstate({
         name: newEstate.name,
-        description: newEstate.description,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        description: newEstate.description
       });
       
       setEstates(prev => [newEstateObj, ...prev]);

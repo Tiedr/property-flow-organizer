@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import ClientForm from "@/components/forms/ClientForm";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +25,8 @@ const ClientDetail = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCreateInvoiceDialogOpen, setIsCreateInvoiceDialogOpen] = useState(false);
+  const [invoiceAmount, setInvoiceAmount] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -122,6 +126,56 @@ const ClientDetail = () => {
     navigate(`/estates/${estateId}`);
   };
 
+  const handleCreateInvoice = () => {
+    setIsCreateInvoiceDialogOpen(true);
+  };
+
+  const handleInvoiceSubmit = async () => {
+    if (!id || !client) return;
+    
+    try {
+      const amount = parseFloat(invoiceAmount);
+      
+      if (isNaN(amount) || amount <= 0) {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a valid amount greater than zero",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Simple mock implementation for demo purposes
+      const newInvoice: Invoice = {
+        id: `INV-${Math.floor(Math.random() * 10000)}`,
+        clientId: id,
+        clientName: client.name,
+        amount: amount,
+        amountPaid: 0,
+        status: "Pending",
+        issuedDate: new Date().toISOString(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      setInvoices(prev => [newInvoice, ...prev]);
+      setIsCreateInvoiceDialogOpen(false);
+      setInvoiceAmount("");
+      
+      toast({
+        title: "Invoice Created",
+        description: `Invoice for ₦${amount.toLocaleString()} has been created successfully.`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to create invoice: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -161,6 +215,10 @@ const ClientDetail = () => {
           </div>
         </div>
         <div className="flex mt-4 sm:mt-0 gap-2">
+          <Button onClick={handleCreateInvoice} className="apple-button">
+            <FilePlus className="mr-2 h-4 w-4" />
+            Create Invoice
+          </Button>
           <Button onClick={handleEdit} className="apple-button-secondary">
             <Edit className="mr-2 h-4 w-4" />
             Edit Client
@@ -357,10 +415,7 @@ const ClientDetail = () => {
                 <Button 
                   variant="outline" 
                   className="ml-auto"
-                  onClick={() => toast({
-                    title: "Coming Soon",
-                    description: "Invoice creation will be implemented in the next version."
-                  })}
+                  onClick={handleCreateInvoice}
                 >
                   <FilePlus className="mr-2 h-4 w-4" />
                   New Invoice
@@ -386,7 +441,7 @@ const ClientDetail = () => {
                           key={invoice.id} 
                           className="cursor-pointer hover:bg-white/5 transition-colors"
                         >
-                          <TableCell>{invoice.id.substring(0, 8).toUpperCase()}</TableCell>
+                          <TableCell>{typeof invoice.id === 'string' ? invoice.id.substring(0, 8).toUpperCase() : 'N/A'}</TableCell>
                           <TableCell>{new Date(invoice.issuedDate).toLocaleDateString()}</TableCell>
                           <TableCell>{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "N/A"}</TableCell>
                           <TableCell>₦{invoice.amount.toLocaleString()}</TableCell>
@@ -412,10 +467,7 @@ const ClientDetail = () => {
                   <p className="text-muted-foreground">No invoices found for this client.</p>
                   <Button 
                     className="mt-4" 
-                    onClick={() => toast({
-                      title: "Coming Soon",
-                      description: "Invoice creation will be implemented in the next version."
-                    })}
+                    onClick={handleCreateInvoice}
                   >
                     <FilePlus className="mr-2 h-4 w-4" />
                     Create Invoice
@@ -435,7 +487,7 @@ const ClientDetail = () => {
           </DialogHeader>
           {client && (
             <ClientForm
-              client={client}
+              initialData={client}
               onSubmit={handleUpdateClient}
               onCancel={() => setIsEditDialogOpen(false)}
             />
@@ -465,6 +517,46 @@ const ClientDetail = () => {
               onClick={handleDeleteConfirm}
             >
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Invoice Dialog */}
+      <Dialog open={isCreateInvoiceDialogOpen} onOpenChange={setIsCreateInvoiceDialogOpen}>
+        <DialogContent className="glass-card max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-gradient">Create New Invoice</DialogTitle>
+            <DialogDescription>
+              Create an invoice for client {client.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Invoice Amount (₦)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Enter amount"
+                value={invoiceAmount}
+                onChange={(e) => setInvoiceAmount(e.target.value)}
+                className="glass-input"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateInvoiceDialogOpen(false)}
+              className="apple-button-secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleInvoiceSubmit}
+              className="apple-button"
+            >
+              Create Invoice
             </Button>
           </DialogFooter>
         </DialogContent>

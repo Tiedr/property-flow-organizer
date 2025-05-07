@@ -118,7 +118,7 @@ export const deleteEstate = async (id: string): Promise<boolean> => {
   });
 };
 
-// Add the missing functions for estate entries
+// Functions for estate entries
 export const createEntry = async (estateId: string, entryData: Omit<EstateEntry, "id">): Promise<EstateEntry | undefined> => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -178,7 +178,7 @@ export const deleteEntry = async (estateId: string, entryId: string): Promise<bo
   });
 };
 
-// Aliases for the functions to match the imports in EstateDetailPage.tsx
+// Export aliases for the functions to match the imports in EstateDetailPage.tsx
 export const createEstateEntry = createEntry;
 export const updateEstateEntry = updateEntry;
 export const deleteEstateEntry = deleteEntry;
