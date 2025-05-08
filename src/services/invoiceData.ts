@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from "uuid";
-import { Invoice, InvoiceItem } from "@/types";
+import { Invoice, InvoiceItem, EstateEntry } from "@/types";
 import { updateEstateEntry } from "@/services/estateData";
 
 // In-memory mock data for invoices
@@ -60,17 +60,20 @@ export const createReceiptFromEstateEntry = async (
       throw new Error("Estate entry not found");
     }
     
+    // Explicitly type the entry data
+    const entry = entryData as EstateEntry;
+    
     // Calculate remaining amount
-    const remainingAmount = entryData.amount - entryData.amountPaid;
+    const remainingAmount = entry.amount - entry.amountPaid;
     
     // Make sure payment isn't more than what's owed
     const actualPayment = Math.min(paymentAmount, remainingAmount);
     
     // Calculate new amount paid and determine payment status
-    const newAmountPaid = entryData.amountPaid + actualPayment;
-    let paymentStatus = entryData.paymentStatus;
+    const newAmountPaid = entry.amountPaid + actualPayment;
+    let paymentStatus = entry.paymentStatus;
     
-    if (newAmountPaid >= entryData.amount) {
+    if (newAmountPaid >= entry.amount) {
       paymentStatus = "Paid";
     } else if (newAmountPaid > 0) {
       paymentStatus = "Partial";
@@ -78,9 +81,9 @@ export const createReceiptFromEstateEntry = async (
     
     // Create a new invoice
     const newInvoice: Omit<Invoice, "id" | "createdAt" | "updatedAt"> = {
-      clientId: entryData.clientId || "",
-      clientName: entryData.clientName,
-      amount: entryData.amount,
+      clientId: entry.clientId || "",
+      clientName: entry.clientName,
+      amount: entry.amount,
       amountPaid: actualPayment, // The amount for this specific receipt
       status: paymentStatus,
       issuedDate: new Date().toISOString(),
@@ -90,10 +93,10 @@ export const createReceiptFromEstateEntry = async (
           id: uuidv4(),
           invoiceId: "", // Will be set after invoice creation
           estateEntryId: entryId,
-          description: `Payment for plot(s) ${entryData.plotNumbers.join(", ")}`,
+          description: `Payment for plot(s) ${entry.plotNumbers.join(", ")}`,
           amount: actualPayment,
           createdAt: new Date().toISOString(),
-          plotDetails: entryData.plotNumbers.join(", ")
+          plotDetails: entry.plotNumbers.join(", ")
         }
       ]
     };
@@ -122,7 +125,7 @@ export const createReceiptFromEstateEntry = async (
 };
 
 // Helper function to fetch an estate entry
-const fetchEstateEntry = async (estateId: string, entryId: string) => {
+const fetchEstateEntry = async (estateId: string, entryId: string): Promise<EstateEntry | undefined> => {
   try {
     // This is a mock implementation - in a real app you'd fetch from API
     return new Promise((resolve) => {
