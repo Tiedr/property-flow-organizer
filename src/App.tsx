@@ -1,52 +1,86 @@
 
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import EstateTable from './pages/EstateTable';
-import ReceiptPage from './pages/ReceiptPage';
-import { useAuth } from './context/AuthContext';
-import './App.css';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import EstateTable from "./pages/EstateTable";
+import EstateDetailPage from "./pages/EstateDetailPage";
+import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
+import UserManagement from "./pages/UserManagement";
+import PromoteAdmin from "./pages/PromoteAdmin";
+import ResetPassword from "./pages/ResetPassword";
+import { AuthProvider } from "./context/AuthContext";
+import AuthGuard from "./components/auth/AuthGuard";
+import Clients from "./pages/Clients";
+import ClientDetail from "./pages/ClientDetail";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 
-function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
-  );
-}
+const queryClient = new QueryClient();
 
-function AppContent() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate loading delay, replace with actual loading check if needed
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-white">Loading...</p>
-      </div>
-    );
-  }
-
-  return (
-    <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
-      <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-      <Route path="/estates" element={user ? <EstateTable /> : <Navigate to="/login" />} />
-      <Route path="/" element={<Navigate to="/estates" />} />
-      <Route path="/receipts/:id" element={<ReceiptPage />} />
-    </Routes>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            {/* Updated routing to fix the 404 issue */}
+            <Route path="/" element={<Navigate to="/estates" />} />
+            <Route path="/estates" element={
+              <AuthGuard>
+                <EstateTable />
+              </AuthGuard>
+            } />
+            <Route path="/estates/:id" element={
+              <AuthGuard>
+                <EstateDetailPage />
+              </AuthGuard>
+            } />
+            <Route path="/clients" element={
+              <AuthGuard>
+                <Clients />
+              </AuthGuard>
+            } />
+            <Route path="/clients/:id" element={
+              <AuthGuard>
+                <ClientDetail />
+              </AuthGuard>
+            } />
+            <Route path="/projects" element={
+              <AuthGuard>
+                <Projects />
+              </AuthGuard>
+            } />
+            <Route path="/projects/:id" element={
+              <AuthGuard>
+                <ProjectDetail />
+              </AuthGuard>
+            } />
+            <Route path="/users" element={
+              <AuthGuard requireAdmin={true}>
+                <UserManagement />
+              </AuthGuard>
+            } />
+            <Route path="/promote-admin" element={
+              <PromoteAdmin />
+            } />
+            <Route path="/reset-password" element={
+              <ResetPassword />
+            } />
+            {/* Add a redirect from /admin-setup for convenience */}
+            <Route path="/admin-setup" element={<Navigate to="/reset-password" />} />
+            <Route path="/dashboard" element={<Navigate to="/estates" />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
