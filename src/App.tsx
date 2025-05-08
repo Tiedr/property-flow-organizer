@@ -4,9 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
-import Clients from './pages/Clients';
 import EstateTable from './pages/EstateTable';
-import Index from './pages/Index';
 import ReceiptPage from './pages/ReceiptPage';
 import { useAuth } from './context/AuthContext';
 import './App.css';
@@ -44,9 +42,8 @@ function AppContent() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
       <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-      <Route path="/clients" element={user ? <Clients /> : <Navigate to="/login" />} />
       <Route path="/estates" element={user ? <EstateTable /> : <Navigate to="/login" />} />
-      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route path="/" element={<Navigate to="/estates" />} />
       <Route path="/receipts/:id" element={<ReceiptPage />} />
     </Routes>
   );
