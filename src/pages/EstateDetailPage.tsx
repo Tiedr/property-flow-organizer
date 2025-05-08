@@ -5,14 +5,16 @@ import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Estate, EstateEntry } from "@/types";
-import { getEstateById } from "@/services/estateData";
+import { getEstateById, createEstateEntry, updateEstateEntry, deleteEstateEntry } from "@/services/estateData";
 import DataTable from "@/components/data/DataTable";
-import { FilePlus } from "lucide-react";
+import { FilePlus, Plus, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { createClientInvoice } from "@/services/clientData";
+import EstateForm from "@/components/forms/EstateForm";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const EstateDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +27,13 @@ const EstateDetailPage = () => {
   const [selectedClientName, setSelectedClientName] = useState<string>("");
   const [isCreateInvoiceDialogOpen, setIsCreateInvoiceDialogOpen] = useState(false);
   const [invoiceAmount, setInvoiceAmount] = useState<string>("");
+  
+  // New state for entry management
+  const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentEntry, setCurrentEntry] = useState<EstateEntry | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEstate = async () => {
@@ -103,6 +112,105 @@ const EstateDetailPage = () => {
     }
   };
 
+  // New functions for entry management
+  const handleAddEntry = () => {
+    setCurrentEntry(null);
+    setIsEditing(false);
+    setIsEntryDialogOpen(true);
+  };
+
+  const handleEditEntry = (entry: EstateEntry) => {
+    setCurrentEntry(entry);
+    setIsEditing(true);
+    setIsEntryDialogOpen(true);
+  };
+
+  const handleDeleteEntry = (entryId: string) => {
+    setDeleteEntryId(entryId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEntrySubmit = async (entryData: Omit<EstateEntry, "id">) => {
+    if (!id) return;
+    
+    try {
+      if (isEditing && currentEntry) {
+        // Update existing entry
+        const updatedEntry = await updateEstateEntry(id, currentEntry.id, entryData);
+        
+        if (updatedEntry && estate) {
+          const updatedEntries = estate.entries.map(entry => 
+            entry.id === updatedEntry.id ? updatedEntry : entry
+          );
+          
+          setEstate({
+            ...estate,
+            entries: updatedEntries
+          });
+          
+          toast({
+            title: "Entry Updated",
+            description: "Estate entry has been updated successfully."
+          });
+        }
+      } else {
+        // Create new entry
+        const newEntry = await createEstateEntry(id, entryData);
+        
+        if (newEntry && estate) {
+          setEstate({
+            ...estate,
+            entries: [...estate.entries, newEntry]
+          });
+          
+          toast({
+            title: "Entry Created",
+            description: "New estate entry has been added successfully."
+          });
+        }
+      }
+      
+      setIsEntryDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to save entry: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const confirmDeleteEntry = async () => {
+    if (!id || !deleteEntryId) return;
+    
+    try {
+      const success = await deleteEstateEntry(id, deleteEntryId);
+      
+      if (success && estate) {
+        const updatedEntries = estate.entries.filter(entry => entry.id !== deleteEntryId);
+        
+        setEstate({
+          ...estate,
+          entries: updatedEntries
+        });
+        
+        toast({
+          title: "Entry Deleted",
+          description: "Estate entry has been deleted successfully."
+        });
+      }
+      
+      setIsDeleteDialogOpen(false);
+      setDeleteEntryId(null);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete entry: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -140,7 +248,14 @@ const EstateDetailPage = () => {
         </div>
 
         <div className="glass-card">
-          <h2 className="text-2xl font-semibold mb-4 text-white">Estate Entries</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-white">Estate Entries</h2>
+            <Button onClick={handleAddEntry} className="apple-button">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Entry
+            </Button>
+          </div>
+          
           {estateEntries.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">No entries found for this estate.</p>
@@ -158,17 +273,39 @@ const EstateDetailPage = () => {
                 { key: "nextDueDate", header: "Next Due Date" },
               ]}
               actions={(entry) => (
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCreateInvoice(entry.clientId || "", entry.clientName);
-                  }}
-                  className="apple-button-secondary"
-                >
-                  <FilePlus className="mr-2 h-4 w-4" />
-                  Invoice
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCreateInvoice(entry.clientId || "", entry.clientName);
+                    }}
+                    className="apple-button-secondary"
+                  >
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    Invoice
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditEntry(entry);
+                    }}
+                    variant="outline"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEntry(entry.id);
+                    }}
+                    variant="destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
               onRowClick={(entry) => {
                 // Fixed: Check if clientId exists and only navigate if it does
@@ -226,6 +363,43 @@ const EstateDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add/Edit Entry Dialog */}
+      <Dialog open={isEntryDialogOpen} onOpenChange={setIsEntryDialogOpen}>
+        <DialogContent className="glass-card max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="text-gradient">{isEditing ? "Edit Estate Entry" : "Add New Estate Entry"}</DialogTitle>
+            <DialogDescription>
+              {isEditing ? "Update the details of this estate entry." : "Create a new entry for this estate."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <EstateForm
+              entry={currentEntry}
+              onSubmit={handleEntrySubmit}
+              onCancel={() => setIsEntryDialogOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Entry Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="glass-card">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-gradient">Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this entry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteEntry} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
