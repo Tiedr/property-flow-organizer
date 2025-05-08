@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
 import PromoteAdmin from "./pages/PromoteAdmin";
 import ResetPassword from "./pages/ResetPassword";
+import Clients from "./pages/Clients";
 import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard";
 
@@ -38,6 +39,11 @@ const App = () => {
               <Route path="/estates/:id" element={
                 <AuthGuard>
                   <EstateDetailPage />
+                </AuthGuard>
+              } />
+              <Route path="/clients" element={
+                <AuthGuard>
+                  <Clients />
                 </AuthGuard>
               } />
               <Route path="/users" element={
