@@ -1,20 +1,20 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Estate, EstateEntry } from "@/types";
+import { Estate, EstateEntry, Invoice, InvoiceItem, ClientDetails } from "@/types";
 import { getEstateById, createEstateEntry, updateEstateEntry, deleteEstateEntry } from "@/services/estateData";
+import { createClientInvoice, getClientById } from "@/services/clientData";
 import DataTable from "@/components/data/DataTable";
-import { FilePlus, Plus, Edit, Trash2 } from "lucide-react";
+import { FilePlus, Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
-import { createClientInvoice } from "@/services/clientData";
 import EstateForm from "@/components/forms/EstateForm";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import InvoiceReceiptDialog from "@/components/invoice/InvoiceReceiptDialog";
 
 const EstateDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +34,12 @@ const EstateDetailPage = () => {
   const [currentEntry, setCurrentEntry] = useState<EstateEntry | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
+
+  // New state for invoice receipt
+  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
+  const [currentClient, setCurrentClient] = useState<ClientDetails | null>(null);
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
 
   useEffect(() => {
     const fetchEstate = async () => {
@@ -91,7 +97,7 @@ const EstateDetailPage = () => {
         return;
       }
       
-      await createClientInvoice(selectedClientId, {
+      const newInvoice = await createClientInvoice(selectedClientId, {
         amount,
         status: "Pending",
       });
@@ -103,10 +109,49 @@ const EstateDetailPage = () => {
         title: "Invoice Created",
         description: `Invoice for ₦${amount.toLocaleString()} has been created for ${selectedClientName}.`
       });
+
+      // Show invoice receipt after creation
+      if (newInvoice) {
+        showInvoiceReceipt(newInvoice, selectedClientId);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to create invoice: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  // New function to handle showing invoice receipt
+  const showInvoiceReceipt = async (invoice: Invoice, clientId: string) => {
+    try {
+      // Fetch client details
+      const clientDetails = await getClientById(clientId);
+      
+      // Set current invoice and client for receipt
+      setCurrentInvoice(invoice);
+      setCurrentClient(clientDetails);
+      
+      // Generate invoice items (simplified for now)
+      const item: InvoiceItem = {
+        id: "",
+        invoiceId: invoice.id,
+        description: "Property Payment",
+        amount: invoice.amount,
+        createdAt: invoice.createdAt,
+        plotDetails: estate?.name || ""
+      };
+      
+      setInvoiceItems([item]);
+      
+      // Open receipt dialog
+      setIsReceiptDialogOpen(true);
+    } catch (error) {
+      console.error("Error preparing receipt:", error);
+      toast({
+        title: "Error",
+        description: "Failed to prepare invoice receipt",
         variant: "destructive"
       });
     }
@@ -281,6 +326,7 @@ const EstateDetailPage = () => {
                       handleCreateInvoice(entry.clientId || "", entry.clientName);
                     }}
                     className="apple-button-secondary"
+                    title="Create Invoice"
                   >
                     <FilePlus className="mr-2 h-4 w-4" />
                     Invoice
@@ -292,6 +338,7 @@ const EstateDetailPage = () => {
                       handleEditEntry(entry);
                     }}
                     variant="outline"
+                    title="Edit Entry"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -302,6 +349,7 @@ const EstateDetailPage = () => {
                       handleDeleteEntry(entry.id);
                     }}
                     variant="destructive"
+                    title="Delete Entry"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -400,6 +448,18 @@ const EstateDetailPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Invoice Receipt Dialog */}
+      {currentInvoice && (
+        <InvoiceReceiptDialog
+          isOpen={isReceiptDialogOpen}
+          onClose={() => setIsReceiptDialogOpen(false)}
+          invoice={currentInvoice}
+          client={currentClient || undefined}
+          estateName={estate.name}
+          invoiceItems={invoiceItems}
+        />
+      )}
     </Layout>
   );
 };
