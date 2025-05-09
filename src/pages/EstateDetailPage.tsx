@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -76,12 +77,18 @@ const EstateDetailPage = () => {
     navigate("/estates");
   };
 
+  // Helper function to validate UUID format
+  const isValidUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
   const handleCreateInvoice = (clientId: string, clientName: string) => {
-    // Validate that we have a proper clientId
-    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
+    // Enhanced validation for client ID - must be a valid UUID
+    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '' || !isValidUUID(clientId)) {
       toast({
         title: "Error",
-        description: "Invalid client ID. Cannot create invoice.",
+        description: `Invalid client ID format: ${clientId}. Cannot create invoice.`,
         variant: "destructive",
       });
       return;
@@ -97,6 +104,16 @@ const EstateDetailPage = () => {
       toast({
         title: "Error",
         description: "Client ID is missing. Cannot create invoice.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Re-validate UUID format before submission
+    if (!isValidUUID(selectedClientId)) {
+      toast({
+        title: "Error",
+        description: `Invalid client ID format: ${selectedClientId}. Cannot create invoice.`,
         variant: "destructive"
       });
       return;
@@ -340,13 +357,13 @@ const EstateDetailPage = () => {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Only try to create an invoice if clientId exists and is valid
-                      if (entry.clientId && typeof entry.clientId === 'string' && entry.clientId.trim() !== '') {
+                      // Enhanced validation - check for valid UUID format
+                      if (entry.clientId && typeof entry.clientId === 'string' && isValidUUID(entry.clientId)) {
                         handleCreateInvoice(entry.clientId, entry.clientName);
                       } else {
                         toast({
                           title: "Error",
-                          description: "This entry has no associated client ID",
+                          description: `Invalid client ID format: ${entry.clientId}. Cannot create invoice.`,
                           variant: "destructive",
                         });
                       }
@@ -382,13 +399,13 @@ const EstateDetailPage = () => {
                 </div>
               )}
               onRowClick={(entry) => {
-                // Fixed: Check if clientId exists and only navigate if it does
-                if (entry.clientId) {
+                // Fixed: Check if clientId exists and is valid before navigating
+                if (entry.clientId && isValidUUID(entry.clientId)) {
                   navigate(`/clients/${entry.clientId}`);
                 } else {
                   toast({
                     title: "Error",
-                    description: "Client ID not found for this entry",
+                    description: "Invalid client ID for this entry",
                     variant: "destructive",
                   });
                 }
@@ -473,7 +490,7 @@ const EstateDetailPage = () => {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </Dialog>
 
       {/* Invoice Receipt Dialog */}
       {currentInvoice && (
