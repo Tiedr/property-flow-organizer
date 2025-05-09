@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast"; // Updated import path
 import { Estate, EstateEntry, Invoice, InvoiceItem, ClientDetails } from "@/types";
 import { getEstateById, createEstateEntry, updateEstateEntry, deleteEstateEntry } from "@/services/estateData";
 import { createClientInvoice, getClientById } from "@/services/clientData";
@@ -490,7 +490,7 @@ const EstateDetailPage = () => {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </Dialog>
+      </AlertDialog>
 
       {/* Invoice Receipt Dialog */}
       {currentInvoice && (
