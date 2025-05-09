@@ -6,9 +6,9 @@ import { isValidUUID } from "./clientUtils";
 // Function to create an invoice for a client
 export const createClientInvoice = async (clientId: string, invoiceData: { amount: number, status: string, dueDate?: string }) => {
   try {
-    // Validate that clientId is a valid UUID format
+    // Validate that clientId is in a valid format
     if (!isValidUUID(clientId)) {
-      throw new Error(`Invalid UUID format for client ID: ${clientId}`);
+      throw new Error(`Invalid ID format for client ID: ${clientId}`);
     }
 
     const { data, error } = await supabase
