@@ -11,6 +11,12 @@ export const createClientInvoice = async (clientId: string, invoiceData: { amoun
       throw new Error(`Invalid ID format for client ID: ${clientId}`);
     }
 
+    // Check specifically for UUID format as required by Supabase
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(clientId)) {
+      throw new Error(`Client ID must be in UUID format for database operations. Received: ${clientId}`);
+    }
+
     const { data, error } = await supabase
       .from("invoices")
       .insert([{

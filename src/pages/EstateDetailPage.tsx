@@ -78,11 +78,13 @@ const EstateDetailPage = () => {
   };
 
   const handleCreateInvoice = (clientId: string, clientName: string) => {
-    // Enhanced validation for client ID - must be a valid UUID
-    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '' || !isValidUUID(clientId)) {
+    // Check for valid UUID format (specific to Supabase requirements)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '' || !uuidRegex.test(clientId)) {
       toast({
         title: "Error",
-        description: `Invalid client ID format: ${clientId}. Cannot create invoice.`,
+        description: `Client ID must be in UUID format. Received: ${clientId}`,
         variant: "destructive",
       });
       return;
@@ -103,11 +105,13 @@ const EstateDetailPage = () => {
       return;
     }
     
-    // Re-validate UUID format before submission
-    if (!isValidUUID(selectedClientId)) {
+    // Check for valid UUID format (specific to Supabase requirements)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!uuidRegex.test(selectedClientId)) {
       toast({
         title: "Error",
-        description: `Invalid client ID format: ${selectedClientId}. Cannot create invoice.`,
+        description: `Client ID must be in UUID format. Received: ${selectedClientId}`,
         variant: "destructive"
       });
       return;
@@ -351,13 +355,14 @@ const EstateDetailPage = () => {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Enhanced validation - check for valid UUID format
-                      if (entry.clientId && typeof entry.clientId === 'string' && isValidUUID(entry.clientId)) {
+                      // Validate UUID format specifically
+                      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                      if (entry.clientId && typeof entry.clientId === 'string' && uuidRegex.test(entry.clientId)) {
                         handleCreateInvoice(entry.clientId, entry.clientName);
                       } else {
                         toast({
                           title: "Error",
-                          description: `Invalid client ID format: ${entry.clientId}. Cannot create invoice.`,
+                          description: `Client ID must be in UUID format. Received: ${entry.clientId}`,
                           variant: "destructive",
                         });
                       }
@@ -393,13 +398,14 @@ const EstateDetailPage = () => {
                 </div>
               )}
               onRowClick={(entry) => {
-                // Fixed: Check if clientId exists and is valid before navigating
-                if (entry.clientId && isValidUUID(entry.clientId)) {
+                // Check for valid UUID format before navigation
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                if (entry.clientId && uuidRegex.test(entry.clientId)) {
                   navigate(`/clients/${entry.clientId}`);
                 } else {
                   toast({
                     title: "Error",
-                    description: "Invalid client ID for this entry",
+                    description: "Invalid client ID format for navigation",
                     variant: "destructive",
                   });
                 }
