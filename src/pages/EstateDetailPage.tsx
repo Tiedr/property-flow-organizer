@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast"; // Updated import path
+import { useToast } from "@/hooks/use-toast";
 import { Estate, EstateEntry, Invoice, InvoiceItem, ClientDetails } from "@/types";
 import { getEstateById, createEstateEntry, updateEstateEntry, deleteEstateEntry } from "@/services/estateData";
 import { createClientInvoice, getClientById } from "@/services/clientData";
+import { isValidUUID } from "@/services/clientUtils"; // Import the utility function directly
 import DataTable from "@/components/data/DataTable";
 import { FilePlus, Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -75,12 +75,6 @@ const EstateDetailPage = () => {
 
   const handleGoBack = () => {
     navigate("/estates");
-  };
-
-  // Helper function to validate UUID format
-  const isValidUUID = (id: string): boolean => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id);
   };
 
   const handleCreateInvoice = (clientId: string, clientName: string) => {
