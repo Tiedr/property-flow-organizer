@@ -77,13 +77,30 @@ const EstateDetailPage = () => {
   };
 
   const handleCreateInvoice = (clientId: string, clientName: string) => {
+    // Validate that we have a proper clientId
+    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
+      toast({
+        title: "Error",
+        description: "Invalid client ID. Cannot create invoice.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedClientId(clientId);
     setSelectedClientName(clientName);
     setIsCreateInvoiceDialogOpen(true);
   };
 
   const handleInvoiceSubmit = async () => {
-    if (!selectedClientId) return;
+    if (!selectedClientId) {
+      toast({
+        title: "Error",
+        description: "Client ID is missing. Cannot create invoice.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       const amount = parseFloat(invoiceAmount);
@@ -323,7 +340,16 @@ const EstateDetailPage = () => {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCreateInvoice(entry.clientId || "", entry.clientName);
+                      // Only try to create an invoice if clientId exists and is valid
+                      if (entry.clientId && typeof entry.clientId === 'string' && entry.clientId.trim() !== '') {
+                        handleCreateInvoice(entry.clientId, entry.clientName);
+                      } else {
+                        toast({
+                          title: "Error",
+                          description: "This entry has no associated client ID",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                     className="apple-button-secondary"
                     title="Create Invoice"
