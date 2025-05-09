@@ -1,4 +1,3 @@
-
 export interface EstateEntry {
   id: string;
   clientName: string;
@@ -41,6 +40,7 @@ export interface Client {
   properties?: number;
   totalAmount?: number;
   totalPaid?: number;
+  address?: string; // Added address property to Client interface
 }
 
 export interface Project {

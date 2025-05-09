@@ -105,6 +105,7 @@ export const getClientById = async (id: string) => {
 
     if (error) throw new Error(error.message);
 
+    // Transform the response to match our Client type
     return {
       id: data.id,
       name: data.name,
@@ -116,7 +117,8 @@ export const getClientById = async (id: string) => {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
       uniqueId: data.unique_id,
-      address: data.address || "", // Added this line to ensure address is returned
+      // The address field doesn't exist in the database, so we're setting it to an empty string
+      address: "", // This matches our Client type which expects an optional address
     };
   } catch (error) {
     console.error("Error fetching client:", error);
