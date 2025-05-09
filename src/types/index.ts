@@ -1,3 +1,4 @@
+
 export interface EstateEntry {
   id: string;
   clientName: string;
@@ -13,8 +14,8 @@ export interface EstateEntry {
   paymentStatus: "Paid" | "Partial" | "Pending" | "Overdue";
   nextDueDate: string;
   clientId?: string;
-  estateName?: string; // Add this property to fix the TypeScript error
-  estateId?: string; // Add the estateId property
+  estateName?: string;
+  estateId?: string;
 }
 
 export interface Estate {
@@ -87,4 +88,5 @@ export interface ClientDetails {
   name: string;
   email: string;
   phone: string;
+  address?: string; // Added address property
 }
