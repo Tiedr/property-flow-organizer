@@ -81,7 +81,16 @@ const EstateDetailPage = () => {
     // Check for valid UUID format (specific to Supabase requirements)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     
-    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '' || !uuidRegex.test(clientId)) {
+    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
+      toast({
+        title: "Error",
+        description: "Client ID is missing or invalid",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!uuidRegex.test(clientId)) {
       toast({
         title: "Error",
         description: `Client ID must be in UUID format. Received: ${clientId}`,
@@ -90,6 +99,7 @@ const EstateDetailPage = () => {
       return;
     }
     
+    console.log("Setting client for invoice creation:", { clientId, clientName });
     setSelectedClientId(clientId);
     setSelectedClientName(clientName);
     setIsCreateInvoiceDialogOpen(true);
@@ -129,6 +139,8 @@ const EstateDetailPage = () => {
         return;
       }
       
+      console.log("Creating invoice with:", { clientId: selectedClientId, amount });
+      
       const newInvoice = await createClientInvoice(selectedClientId, {
         amount,
         status: "Pending",
@@ -147,6 +159,7 @@ const EstateDetailPage = () => {
         showInvoiceReceipt(newInvoice, selectedClientId);
       }
     } catch (error: any) {
+      console.error("Invoice creation failed:", error);
       toast({
         title: "Error",
         description: "Failed to create invoice: " + (error.message || "Unknown error"),
@@ -358,6 +371,7 @@ const EstateDetailPage = () => {
                       // Validate UUID format specifically
                       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                       if (entry.clientId && typeof entry.clientId === 'string' && uuidRegex.test(entry.clientId)) {
+                        console.log("Creating invoice from table action for:", entry.clientId);
                         handleCreateInvoice(entry.clientId, entry.clientName);
                       } else {
                         toast({

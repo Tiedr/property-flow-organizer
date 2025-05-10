@@ -5,8 +5,8 @@ export const generateClientId = () => {
   return `CL-${randomPart}`;
 };
 
-// Validates if a string is a valid ID format for use in database operations
-// This function now accepts both UUID format and numeric IDs
+// Validates if a string is a valid UUID format
+// This is specifically checking for the UUID format required by Supabase
 export const isValidUUID = (id: string | number): boolean => {
   if (id === undefined || id === null) {
     return false;
@@ -18,8 +18,5 @@ export const isValidUUID = (id: string | number): boolean => {
   // Check for standard UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // Check for numeric ID format (1, 2, etc.)
-  const numericIdRegex = /^\d+$/;
-  
-  return uuidRegex.test(idStr) || numericIdRegex.test(idStr);
+  return uuidRegex.test(idStr);
 };

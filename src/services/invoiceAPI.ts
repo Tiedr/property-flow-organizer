@@ -17,6 +17,9 @@ export const createClientInvoice = async (clientId: string, invoiceData: { amoun
       throw new Error(`Client ID must be in UUID format for database operations. Received: ${clientId}`);
     }
 
+    // Log the request for debugging
+    console.log("Creating invoice with data:", { clientId, invoiceData });
+
     const { data, error } = await supabase
       .from("invoices")
       .insert([{
@@ -29,7 +32,17 @@ export const createClientInvoice = async (clientId: string, invoiceData: { amoun
       .select("*, clients(name)")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Supabase error creating invoice:", error);
+      throw new Error(error.message);
+    }
+
+    if (!data) {
+      console.error("No data returned from invoice creation");
+      throw new Error("Failed to create invoice - no data returned");
+    }
+
+    console.log("Invoice created successfully:", data);
 
     // Transform the response to match our Invoice type
     return {
