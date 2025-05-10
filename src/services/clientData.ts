@@ -20,3 +20,6 @@ export {
 } from './invoiceAPI';
 
 export { getClientProperties } from './propertyAPI';
+
+// Re-export the UUID fetcher utility functions for convenience
+export { fetchClientUUIDById, fetchEstateEntryUUIDById } from '@/utils/uuidFetcher';

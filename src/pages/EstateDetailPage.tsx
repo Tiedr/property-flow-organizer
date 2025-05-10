@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Estate, EstateEntry, Invoice, InvoiceItem, ClientDetails } from "@/types";
 import { getEstateById, createEstateEntry, updateEstateEntry, deleteEstateEntry } from "@/services/estateData";
-import { createClientInvoice, getClientById } from "@/services/clientData";
+import { createClientInvoice, getClientById, fetchClientUUIDById } from "@/services/clientData";
 import { isValidUUID } from "@/services/clientUtils"; 
-import { fetchClientUUIDById } from "@/utils/uuidFetcher";
 import DataTable from "@/components/data/DataTable";
 import { FilePlus, Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -90,31 +89,10 @@ const EstateDetailPage = () => {
         return;
       }
       
-      // Check if it's already in UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      let validClientId = clientId;
+      console.log("Creating invoice for client:", { clientId, clientName });
       
-      // If not in UUID format, try to fetch the UUID
-      if (!uuidRegex.test(clientId)) {
-        console.log("Client ID not in UUID format. Attempting to fetch UUID for:", clientId);
-        const uuid = await fetchClientUUIDById(clientId);
-        
-        if (!uuid) {
-          toast({
-            title: "Error",
-            description: `Could not find a valid UUID for client ID: ${clientId}`,
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        validClientId = uuid;
-        console.log("Found valid UUID:", validClientId);
-      }
-      
-      // Now that we have a valid UUID, proceed with invoice creation
-      console.log("Setting client for invoice creation:", { clientId: validClientId, clientName });
-      setSelectedClientId(validClientId);
+      // Set the client information for the dialog
+      setSelectedClientId(clientId);
       setSelectedClientName(clientName);
       setIsCreateInvoiceDialogOpen(true);
     } catch (error) {
@@ -132,18 +110,6 @@ const EstateDetailPage = () => {
       toast({
         title: "Error",
         description: "Client ID is missing. Cannot create invoice.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Check for valid UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    
-    if (!uuidRegex.test(selectedClientId)) {
-      toast({
-        title: "Error",
-        description: `Client ID must be in UUID format. Received: ${selectedClientId}`,
         variant: "destructive"
       });
       return;
@@ -400,7 +366,6 @@ const EstateDetailPage = () => {
                         return;
                       }
                       
-                      // Always use client ID that's in UUID format for invoice creation
                       console.log("Creating invoice from table action for:", entry.clientId);
                       await handleCreateInvoice(entry.clientId, entry.clientName);
                     }}
@@ -435,9 +400,7 @@ const EstateDetailPage = () => {
                 </div>
               )}
               onRowClick={(entry) => {
-                // Check for valid UUID format before navigation
-                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-                if (entry.clientId && uuidRegex.test(entry.clientId)) {
+                if (entry.clientId) {
                   navigate(`/clients/${entry.clientId}`);
                 } else {
                   toast({

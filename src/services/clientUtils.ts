@@ -34,8 +34,9 @@ export const isValidClientId = (id: string | number): boolean => {
   // Check for standard UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // Check for numeric ID format (1, 2, etc.) or other common formats
+  // Check for numeric ID format (1, 2, etc.) or other common formats like CL-XXXX
   const numericIdRegex = /^\d+$/;
+  const clientIdRegex = /^CL-\d+$/;
   
-  return uuidRegex.test(idStr) || numericIdRegex.test(idStr);
+  return uuidRegex.test(idStr) || numericIdRegex.test(idStr) || clientIdRegex.test(idStr);
 };

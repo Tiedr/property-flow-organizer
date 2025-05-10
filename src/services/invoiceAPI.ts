@@ -2,32 +2,42 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Invoice } from "@/types";
 import { isValidUUID } from "./clientUtils";
+import { fetchClientUUIDById } from "@/utils/uuidFetcher";
 
 // Function to create an invoice for a client
 export const createClientInvoice = async (clientId: string, invoiceData: { amount: number, status: string, dueDate?: string }) => {
   try {
     console.log("Starting invoice creation process for client:", clientId);
     
-    // Validate that clientId is in a valid format
-    if (!isValidUUID(clientId)) {
-      console.error("Invalid ID format for client ID:", clientId);
-      throw new Error(`Invalid ID format for client ID: ${clientId}`);
-    }
-
-    // Check specifically for UUID format as required by Supabase
+    // First try to convert clientId to UUID format if it's not already
+    let validClientId = clientId;
+    
+    // Check for standard UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(clientId)) {
-      console.error("Client ID must be in UUID format. Received:", clientId);
-      throw new Error(`Client ID must be in UUID format for database operations. Received: ${clientId}`);
+      console.log(`Client ID ${clientId} is not in UUID format, attempting to fetch UUID...`);
+      const uuid = await fetchClientUUIDById(clientId);
+      if (!uuid) {
+        console.error(`Failed to find UUID for client ID: ${clientId}`);
+        throw new Error(`Failed to find a valid UUID for client ID: ${clientId}`);
+      }
+      validClientId = uuid;
+      console.log(`Successfully fetched UUID ${validClientId} for client ID: ${clientId}`);
+    }
+
+    // Double check that we now have a valid UUID
+    if (!isValidUUID(validClientId)) {
+      console.error("Client ID must be in UUID format. Received:", validClientId);
+      throw new Error(`Client ID must be in UUID format for database operations. Received: ${validClientId}`);
     }
 
     // Log the request for debugging
-    console.log("Creating invoice with data:", { clientId, invoiceData });
+    console.log("Creating invoice with data:", { clientId: validClientId, invoiceData });
 
     const { data, error } = await supabase
       .from("invoices")
       .insert([{
-        client_id: clientId,
+        client_id: validClientId,
         amount: invoiceData.amount,
         amount_paid: 0, // Initialize as 0
         status: invoiceData.status || 'Pending',
@@ -71,10 +81,26 @@ export const createClientInvoice = async (clientId: string, invoiceData: { amoun
 // Get all invoices for a client
 export const getClientInvoices = async (clientId: string) => {
   try {
+    // First try to convert clientId to UUID format if it's not already
+    let validClientId = clientId;
+    
+    // Check for standard UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(clientId)) {
+      console.log(`Client ID ${clientId} is not in UUID format, attempting to fetch UUID...`);
+      const uuid = await fetchClientUUIDById(clientId);
+      if (!uuid) {
+        console.error(`Failed to find UUID for client ID: ${clientId}`);
+        throw new Error(`Failed to find a valid UUID for client ID: ${clientId}`);
+      }
+      validClientId = uuid;
+      console.log(`Successfully fetched UUID ${validClientId} for client ID: ${clientId}`);
+    }
+
     const { data, error } = await supabase
       .from("invoices")
       .select("*, invoice_items(*)")
-      .eq("client_id", clientId)
+      .eq("client_id", validClientId)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);

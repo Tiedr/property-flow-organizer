@@ -16,11 +16,14 @@ export const fetchClientUUIDById = async (numericId: string | number): Promise<s
       return idStr; // Already a UUID, return as is
     }
     
+    console.log(`Fetching UUID for client with unique_id: ${idStr}`);
+    
     // Query the database to get the UUID corresponding to this numeric ID
+    // Important: We search by unique_id field, not the primary key id
     const { data, error } = await supabase
       .from("clients")
       .select("id")
-      .eq("id", idStr) // Convert to string to fix the TypeScript error
+      .eq("unique_id", idStr)
       .single();
     
     if (error || !data) {
@@ -28,6 +31,7 @@ export const fetchClientUUIDById = async (numericId: string | number): Promise<s
       return null;
     }
     
+    console.log(`Found UUID ${data.id} for client with unique_id: ${idStr}`);
     return data.id;
   } catch (error) {
     console.error("Error in fetchClientUUIDById:", error);
@@ -49,11 +53,14 @@ export const fetchEstateEntryUUIDById = async (entryId: string | number): Promis
       return idStr; // Already a UUID, return as is
     }
     
+    console.log(`Fetching UUID for estate entry with unique_id: ${idStr}`);
+    
     // Query the database to get the UUID corresponding to this numeric ID
+    // Important: We search by unique_id field, not the primary key id
     const { data, error } = await supabase
       .from("estate_entries")
       .select("id")
-      .eq("id", idStr) // Convert to string to fix the TypeScript error
+      .eq("unique_id", idStr)
       .single();
     
     if (error || !data) {
@@ -61,6 +68,7 @@ export const fetchEstateEntryUUIDById = async (entryId: string | number): Promis
       return null;
     }
     
+    console.log(`Found UUID ${data.id} for estate entry with unique_id: ${idStr}`);
     return data.id;
   } catch (error) {
     console.error("Error in fetchEstateEntryUUIDById:", error);
