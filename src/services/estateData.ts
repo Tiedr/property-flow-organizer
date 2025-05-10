@@ -1,185 +1,411 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { Estate, EstateEntry } from "@/types";
-
-const mockEstates: Estate[] = [
-  {
-    id: "1",
-    name: "Westlands Estate",
-    description: "A prime estate in the heart of Westlands.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    entries: [
-      {
-        id: uuidv4(),
-        clientId: "1", // Ensure clientId is set properly
-        clientName: "John Doe",
-        uniqueId: "JD123",
-        representative: "Jane Smith",
-        plotNumbers: ["W1", "W2"],
-        amount: 500000,
-        amountPaid: 250000,
-        documentsReceived: ["ID", "Title Deed"],
-        phoneNumber: "+254712345678",
-        email: "john.doe@example.com",
-        address: "Westlands, Nairobi",
-        paymentStatus: "Partial",
-        nextDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Kilimani Heights",
-    description: "Luxury apartments in Kilimani.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    entries: [
-      {
-        id: uuidv4(),
-        clientId: "2", // Ensure clientId is set properly
-        clientName: "Alice Maina",
-        uniqueId: "AM456",
-        representative: "Bob Kamau",
-        plotNumbers: ["K10", "K11"],
-        amount: 750000,
-        amountPaid: 750000,
-        documentsReceived: ["ID", "KRA Pin"],
-        phoneNumber: "+254722333444",
-        email: "alice.maina@example.com",
-        address: "Kilimani, Nairobi",
-        paymentStatus: "Paid",
-        nextDueDate: new Date(new Date().setDate(new Date().getDate() + 60)).toISOString(),
-      },
-    ],
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 export const getAllEstates = async (): Promise<Estate[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(mockEstates);
-    }, 200);
-  });
+  try {
+    // Fetch all estates from the database
+    const { data: estatesData, error: estatesError } = await supabase
+      .from("estates")
+      .select("*")
+      .order('created_at', { ascending: false });
+    
+    if (estatesError) {
+      console.error("Error fetching estates:", estatesError);
+      throw estatesError;
+    }
+
+    // For each estate, fetch its entries
+    const estates = await Promise.all(estatesData.map(async (estate) => {
+      const { data: entriesData, error: entriesError } = await supabase
+        .from("estate_entries")
+        .select("*")
+        .eq("estate_id", estate.id);
+      
+      if (entriesError) {
+        console.error(`Error fetching entries for estate ${estate.id}:`, entriesError);
+        throw entriesError;
+      }
+
+      // Convert database columns to match the frontend types
+      const mappedEntries: EstateEntry[] = entriesData.map(entry => ({
+        id: entry.id,
+        clientId: entry.client_id,
+        clientName: entry.client_name,
+        uniqueId: entry.unique_id || "",
+        representative: entry.representative || "",
+        plotNumbers: entry.plot_numbers || [],
+        amount: entry.amount,
+        amountPaid: entry.amount_paid,
+        documentsReceived: entry.documents_received || [],
+        phoneNumber: entry.phone_number || "",
+        email: entry.email || "",
+        address: entry.address || "",
+        paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+        nextDueDate: entry.next_due_date || "",
+        estateId: entry.estate_id,
+        estateName: estate.name,
+      }));
+
+      // Return the estate with its entries
+      return {
+        id: estate.id,
+        name: estate.name,
+        description: estate.description,
+        createdAt: estate.created_at,
+        updatedAt: estate.updated_at,
+        entries: mappedEntries,
+      };
+    }));
+
+    return estates;
+  } catch (error) {
+    console.error("Error in getAllEstates:", error);
+    throw error;
+  }
 };
 
 export const getEstateById = async (id: string): Promise<Estate | undefined> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const estate = mockEstates.find((estate) => estate.id === id);
-      resolve(estate);
-    }, 200);
-  });
+  try {
+    // Fetch the estate by ID
+    const { data: estateData, error: estateError } = await supabase
+      .from("estates")
+      .select("*")
+      .eq("id", id)
+      .single();
+    
+    if (estateError) {
+      console.error(`Error fetching estate ${id}:`, estateError);
+      throw estateError;
+    }
+
+    // Fetch the estate entries
+    const { data: entriesData, error: entriesError } = await supabase
+      .from("estate_entries")
+      .select("*")
+      .eq("estate_id", id);
+    
+    if (entriesError) {
+      console.error(`Error fetching entries for estate ${id}:`, entriesError);
+      throw entriesError;
+    }
+
+    // Convert database columns to match the frontend types
+    const mappedEntries: EstateEntry[] = entriesData.map(entry => ({
+      id: entry.id,
+      clientId: entry.client_id,
+      clientName: entry.client_name,
+      uniqueId: entry.unique_id || "",
+      representative: entry.representative || "",
+      plotNumbers: entry.plot_numbers || [],
+      amount: entry.amount,
+      amountPaid: entry.amount_paid,
+      documentsReceived: entry.documents_received || [],
+      phoneNumber: entry.phone_number || "",
+      email: entry.email || "",
+      address: entry.address || "",
+      paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+      nextDueDate: entry.next_due_date || "",
+      estateId: entry.estate_id,
+      estateName: estateData.name,
+    }));
+
+    // Return the estate with its entries
+    return {
+      id: estateData.id,
+      name: estateData.name,
+      description: estateData.description,
+      createdAt: estateData.created_at,
+      updatedAt: estateData.updated_at,
+      entries: mappedEntries,
+    };
+  } catch (error) {
+    console.error(`Error in getEstateById for id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createEstate = async (estateData: Omit<Estate, "id" | "createdAt" | "updatedAt" | "entries">): Promise<Estate> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newEstate: Estate = {
-        id: uuidv4(),
-        ...estateData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        entries: [],
-      };
-      mockEstates.push(newEstate);
-      resolve(newEstate);
-    }, 200);
-  });
+  try {
+    // Insert the new estate into the database
+    const { data, error } = await supabase
+      .from("estates")
+      .insert({
+        name: estateData.name,
+        description: estateData.description,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating estate:", error);
+      throw error;
+    }
+
+    // Return the new estate with an empty entries array
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      entries: [],
+    };
+  } catch (error) {
+    console.error("Error in createEstate:", error);
+    throw error;
+  }
 };
 
 export const updateEstate = async (id: string, updates: Partial<Estate>): Promise<Estate | undefined> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockEstates.findIndex((estate) => estate.id === id);
-      if (index !== -1) {
-        mockEstates[index] = {
-          ...mockEstates[index],
-          ...updates,
-          updatedAt: new Date().toISOString(),
-        };
-        resolve(mockEstates[index]);
-      } else {
-        resolve(undefined);
-      }
-    }, 200);
-  });
+  try {
+    // Update the estate in the database
+    const { data, error } = await supabase
+      .from("estates")
+      .update({
+        name: updates.name,
+        description: updates.description,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Error updating estate ${id}:`, error);
+      throw error;
+    }
+
+    // Fetch the estate entries to include in the return value
+    const { data: entriesData, error: entriesError } = await supabase
+      .from("estate_entries")
+      .select("*")
+      .eq("estate_id", id);
+    
+    if (entriesError) {
+      console.error(`Error fetching entries for estate ${id}:`, entriesError);
+      throw entriesError;
+    }
+
+    // Convert database columns to match the frontend types
+    const mappedEntries: EstateEntry[] = entriesData.map(entry => ({
+      id: entry.id,
+      clientId: entry.client_id,
+      clientName: entry.client_name,
+      uniqueId: entry.unique_id || "",
+      representative: entry.representative || "",
+      plotNumbers: entry.plot_numbers || [],
+      amount: entry.amount,
+      amountPaid: entry.amount_paid,
+      documentsReceived: entry.documents_received || [],
+      phoneNumber: entry.phone_number || "",
+      email: entry.email || "",
+      address: entry.address || "",
+      paymentStatus: entry.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+      nextDueDate: entry.next_due_date || "",
+      estateId: entry.estate_id,
+      estateName: data.name,
+    }));
+
+    // Return the updated estate with its entries
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      entries: mappedEntries,
+    };
+  } catch (error) {
+    console.error(`Error in updateEstate for id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteEstate = async (id: string): Promise<boolean> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockEstates.findIndex((estate) => estate.id === id);
-      if (index !== -1) {
-        mockEstates.splice(index, 1);
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    }, 200);
-  });
+  try {
+    // First delete all entries related to this estate
+    const { error: entriesError } = await supabase
+      .from("estate_entries")
+      .delete()
+      .eq("estate_id", id);
+    
+    if (entriesError) {
+      console.error(`Error deleting entries for estate ${id}:`, entriesError);
+      throw entriesError;
+    }
+
+    // Then delete the estate itself
+    const { error } = await supabase
+      .from("estates")
+      .delete()
+      .eq("id", id);
+    
+    if (error) {
+      console.error(`Error deleting estate ${id}:`, error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Error in deleteEstate for id ${id}:`, error);
+    throw error;
+  }
 };
 
-// Functions for estate entries
+// Estate entry functions
 export const createEntry = async (estateId: string, entryData: Omit<EstateEntry, "id">): Promise<EstateEntry | undefined> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const estate = mockEstates.find((estate) => estate.id === estateId);
-      if (estate) {
-        const newEntry: EstateEntry = {
-          id: uuidv4(),
-          ...entryData,
-          // Ensure new entries have a clientId if not provided
-          clientId: entryData.clientId || uuidv4(),
-        };
-        estate.entries.push(newEntry);
-        resolve(newEntry);
-      } else {
-        resolve(undefined);
-      }
-    }, 200);
-  });
+  try {
+    // Get estate name to include in the entry
+    const { data: estateData, error: estateError } = await supabase
+      .from("estates")
+      .select("name")
+      .eq("id", estateId)
+      .single();
+    
+    if (estateError) {
+      console.error(`Error fetching estate ${estateId}:`, estateError);
+      throw estateError;
+    }
+
+    // Insert the new entry into the database
+    const { data, error } = await supabase
+      .from("estate_entries")
+      .insert({
+        estate_id: estateId,
+        client_id: entryData.clientId,
+        client_name: entryData.clientName,
+        unique_id: entryData.uniqueId,
+        representative: entryData.representative,
+        plot_numbers: entryData.plotNumbers,
+        amount: entryData.amount,
+        amount_paid: entryData.amountPaid,
+        documents_received: entryData.documentsReceived,
+        phone_number: entryData.phoneNumber,
+        email: entryData.email,
+        address: entryData.address,
+        payment_status: entryData.paymentStatus,
+        next_due_date: entryData.nextDueDate,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Error creating entry for estate ${estateId}:`, error);
+      throw error;
+    }
+
+    // Convert database columns to match the frontend types
+    return {
+      id: data.id,
+      clientId: data.client_id,
+      clientName: data.client_name,
+      uniqueId: data.unique_id || "",
+      representative: data.representative || "",
+      plotNumbers: data.plot_numbers || [],
+      amount: data.amount,
+      amountPaid: data.amount_paid,
+      documentsReceived: data.documents_received || [],
+      phoneNumber: data.phone_number || "",
+      email: data.email || "",
+      address: data.address || "",
+      paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+      nextDueDate: data.next_due_date || "",
+      estateId: data.estate_id,
+      estateName: estateData.name,
+    };
+  } catch (error) {
+    console.error(`Error in createEntry for estate ${estateId}:`, error);
+    throw error;
+  }
 };
 
 export const updateEntry = async (estateId: string, entryId: string, updates: Partial<EstateEntry>): Promise<EstateEntry | undefined> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const estate = mockEstates.find((estate) => estate.id === estateId);
-      if (estate) {
-        const entryIndex = estate.entries.findIndex((entry) => entry.id === entryId);
-        if (entryIndex !== -1) {
-          estate.entries[entryIndex] = {
-            ...estate.entries[entryIndex],
-            ...updates,
-          };
-          resolve(estate.entries[entryIndex]);
-        } else {
-          resolve(undefined);
-        }
-      } else {
-        resolve(undefined);
-      }
-    }, 200);
-  });
+  try {
+    // Update the entry in the database
+    const { data, error } = await supabase
+      .from("estate_entries")
+      .update({
+        client_id: updates.clientId,
+        client_name: updates.clientName,
+        unique_id: updates.uniqueId,
+        representative: updates.representative,
+        plot_numbers: updates.plotNumbers,
+        amount: updates.amount,
+        amount_paid: updates.amountPaid,
+        documents_received: updates.documentsReceived,
+        phone_number: updates.phoneNumber,
+        email: updates.email,
+        address: updates.address,
+        payment_status: updates.paymentStatus,
+        next_due_date: updates.nextDueDate,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", entryId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Error updating entry ${entryId}:`, error);
+      throw error;
+    }
+
+    // Get estate name to include in the response
+    const { data: estateData, error: estateError } = await supabase
+      .from("estates")
+      .select("name")
+      .eq("id", estateId)
+      .single();
+    
+    if (estateError) {
+      console.error(`Error fetching estate ${estateId}:`, estateError);
+      throw estateError;
+    }
+
+    // Convert database columns to match the frontend types
+    return {
+      id: data.id,
+      clientId: data.client_id,
+      clientName: data.client_name,
+      uniqueId: data.unique_id || "",
+      representative: data.representative || "",
+      plotNumbers: data.plot_numbers || [],
+      amount: data.amount,
+      amountPaid: data.amount_paid,
+      documentsReceived: data.documents_received || [],
+      phoneNumber: data.phone_number || "",
+      email: data.email || "",
+      address: data.address || "",
+      paymentStatus: data.payment_status as "Paid" | "Partial" | "Pending" | "Overdue",
+      nextDueDate: data.next_due_date || "",
+      estateId: data.estate_id,
+      estateName: estateData.name,
+    };
+  } catch (error) {
+    console.error(`Error in updateEntry for entry ${entryId}:`, error);
+    throw error;
+  }
 };
 
 export const deleteEntry = async (estateId: string, entryId: string): Promise<boolean> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const estate = mockEstates.find((estate) => estate.id === estateId);
-      if (estate) {
-        const entryIndex = estate.entries.findIndex((entry) => entry.id === entryId);
-        if (entryIndex !== -1) {
-          estate.entries.splice(entryIndex, 1);
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      } else {
-        resolve(false);
-      }
-    }, 200);
-  });
+  try {
+    // Delete the entry from the database
+    const { error } = await supabase
+      .from("estate_entries")
+      .delete()
+      .eq("id", entryId);
+    
+    if (error) {
+      console.error(`Error deleting entry ${entryId}:`, error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Error in deleteEntry for entry ${entryId}:`, error);
+    throw error;
+  }
 };
 
 // Export aliases for the functions to match the imports in EstateDetailPage.tsx
