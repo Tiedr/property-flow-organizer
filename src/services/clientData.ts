@@ -12,7 +12,7 @@ export {
   getAllClients
 } from './clientAPI';
 
-export { generateClientId, isValidUUID } from './clientUtils';
+export { generateClientId, isValidUUID, isValidClientId } from './clientUtils';
 
 export {
   createClientInvoice,

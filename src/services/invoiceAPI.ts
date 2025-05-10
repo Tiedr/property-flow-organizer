@@ -6,14 +6,18 @@ import { isValidUUID } from "./clientUtils";
 // Function to create an invoice for a client
 export const createClientInvoice = async (clientId: string, invoiceData: { amount: number, status: string, dueDate?: string }) => {
   try {
+    console.log("Starting invoice creation process for client:", clientId);
+    
     // Validate that clientId is in a valid format
     if (!isValidUUID(clientId)) {
+      console.error("Invalid ID format for client ID:", clientId);
       throw new Error(`Invalid ID format for client ID: ${clientId}`);
     }
 
     // Check specifically for UUID format as required by Supabase
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(clientId)) {
+      console.error("Client ID must be in UUID format. Received:", clientId);
       throw new Error(`Client ID must be in UUID format for database operations. Received: ${clientId}`);
     }
 

@@ -20,3 +20,22 @@ export const isValidUUID = (id: string | number): boolean => {
   
   return uuidRegex.test(idStr);
 };
+
+// Check if a value could represent a valid client ID in any format
+// This is more permissive than isValidUUID and allows for different ID formats
+export const isValidClientId = (id: string | number): boolean => {
+  if (id === undefined || id === null) {
+    return false;
+  }
+  
+  // Convert to string if it's a number
+  const idStr = String(id);
+  
+  // Check for standard UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  // Check for numeric ID format (1, 2, etc.) or other common formats
+  const numericIdRegex = /^\d+$/;
+  
+  return uuidRegex.test(idStr) || numericIdRegex.test(idStr);
+};

@@ -6,7 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Estate, EstateEntry, Invoice, InvoiceItem, ClientDetails } from "@/types";
 import { getEstateById, createEstateEntry, updateEstateEntry, deleteEstateEntry } from "@/services/estateData";
 import { createClientInvoice, getClientById } from "@/services/clientData";
-import { isValidUUID } from "@/services/clientUtils"; // Import the utility function directly
+import { isValidUUID } from "@/services/clientUtils"; 
+import { fetchClientUUIDById } from "@/utils/uuidFetcher";
 import DataTable from "@/components/data/DataTable";
 import { FilePlus, Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -77,32 +78,53 @@ const EstateDetailPage = () => {
     navigate("/estates");
   };
 
-  const handleCreateInvoice = (clientId: string, clientName: string) => {
-    // Check for valid UUID format (specific to Supabase requirements)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    
-    if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
+  const handleCreateInvoice = async (clientId: string, clientName: string) => {
+    try {
+      // Validate the client ID is not empty or null
+      if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
+        toast({
+          title: "Error",
+          description: "Client ID is missing or invalid",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check if it's already in UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      let validClientId = clientId;
+      
+      // If not in UUID format, try to fetch the UUID
+      if (!uuidRegex.test(clientId)) {
+        console.log("Client ID not in UUID format. Attempting to fetch UUID for:", clientId);
+        const uuid = await fetchClientUUIDById(clientId);
+        
+        if (!uuid) {
+          toast({
+            title: "Error",
+            description: `Could not find a valid UUID for client ID: ${clientId}`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        validClientId = uuid;
+        console.log("Found valid UUID:", validClientId);
+      }
+      
+      // Now that we have a valid UUID, proceed with invoice creation
+      console.log("Setting client for invoice creation:", { clientId: validClientId, clientName });
+      setSelectedClientId(validClientId);
+      setSelectedClientName(clientName);
+      setIsCreateInvoiceDialogOpen(true);
+    } catch (error) {
+      console.error("Error preparing to create invoice:", error);
       toast({
         title: "Error",
-        description: "Client ID is missing or invalid",
+        description: "Failed to prepare invoice creation",
         variant: "destructive",
       });
-      return;
     }
-    
-    if (!uuidRegex.test(clientId)) {
-      toast({
-        title: "Error",
-        description: `Client ID must be in UUID format. Received: ${clientId}`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    console.log("Setting client for invoice creation:", { clientId, clientName });
-    setSelectedClientId(clientId);
-    setSelectedClientName(clientName);
-    setIsCreateInvoiceDialogOpen(true);
   };
 
   const handleInvoiceSubmit = async () => {
@@ -115,7 +137,7 @@ const EstateDetailPage = () => {
       return;
     }
     
-    // Check for valid UUID format (specific to Supabase requirements)
+    // Check for valid UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     
     if (!uuidRegex.test(selectedClientId)) {
@@ -366,20 +388,21 @@ const EstateDetailPage = () => {
                 <div className="flex space-x-2">
                   <Button
                     size="sm"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
-                      // Validate UUID format specifically
-                      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-                      if (entry.clientId && typeof entry.clientId === 'string' && uuidRegex.test(entry.clientId)) {
-                        console.log("Creating invoice from table action for:", entry.clientId);
-                        handleCreateInvoice(entry.clientId, entry.clientName);
-                      } else {
+                      
+                      if (!entry.clientId) {
                         toast({
                           title: "Error",
-                          description: `Client ID must be in UUID format. Received: ${entry.clientId}`,
+                          description: "Missing client ID for this entry",
                           variant: "destructive",
                         });
+                        return;
                       }
+                      
+                      // Always use client ID that's in UUID format for invoice creation
+                      console.log("Creating invoice from table action for:", entry.clientId);
+                      await handleCreateInvoice(entry.clientId, entry.clientName);
                     }}
                     className="apple-button-secondary"
                     title="Create Invoice"
