@@ -20,7 +20,7 @@ export const fetchClientUUIDById = async (numericId: string | number): Promise<s
     const { data, error } = await supabase
       .from("clients")
       .select("id")
-      .eq("id", numericId)
+      .eq("id", idStr) // Convert to string to fix the TypeScript error
       .single();
     
     if (error || !data) {
@@ -53,7 +53,7 @@ export const fetchEstateEntryUUIDById = async (entryId: string | number): Promis
     const { data, error } = await supabase
       .from("estate_entries")
       .select("id")
-      .eq("id", entryId)
+      .eq("id", idStr) // Convert to string to fix the TypeScript error
       .single();
     
     if (error || !data) {
