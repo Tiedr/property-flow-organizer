@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,10 +27,13 @@ const Clients = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (user) {
+      fetchClients();
+    }
+  }, [user]);
 
   const fetchClients = async () => {
     try {
@@ -111,6 +115,20 @@ const Clients = () => {
     client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     client.phone.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-full">
+          <p className="text-white mb-4">Please sign in to view clients</p>
+          <Button onClick={() => navigate('/auth')} className="apple-button">
+            Sign In
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
